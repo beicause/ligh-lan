@@ -1,0 +1,48 @@
+{
+  "name": "ligh-lan-electron",
+  "version": "0.0.0",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -cw",
+    "build-page": "cd ../webpage && pnpm build && cd ../electron && pnpm copy-page",
+    "copy-page": "rimraf ./dist/page && node ../../scripts/copy_page.js",
+    "lint": "eslint -c .eslintrc --ext .ts ./src",
+    "start": "electron ./dist/main.js",
+    "pack": "electron-builder --dir",
+    "out": "electron-builder"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.0.6",
+    "@types/bluebird": "^3.5.36",
+    "@types/connect": "^3.4.35",
+    "electron": "^16.0.2",
+    "electron-builder": "^22.14.5",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.62.0",
+    "rollup-plugin-typescript2": "^0.31.1",
+    "ts-toolbelt": "^9.6.0"
+  },
+  "dependencies": {
+    "connect": "^3.7.0",
+    "ligh-lan-webpage": "workspace:*",
+    "sirv": "^2.0.0"
+  },
+  "build": {
+    "appId": "your.id",
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "out",
+      "buildResources": "res"
+    },
+    "mac": {
+      "category": "Utility"
+    }
+  }
+}
