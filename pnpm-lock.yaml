@@ -78,6 +78,7 @@ importers:
 
   packages/webpage:
     specifiers:
+      '@iconify/json': ^1.1.451
       '@vitejs/plugin-vue': ^2.0.0
       axios: ^0.24.0
       electron: ^16.0.5
@@ -101,6 +102,7 @@ importers:
       vue: 3.2.26
       vue-router: 4.0.12_vue@3.2.26
     devDependencies:
+      '@iconify/json': 1.1.451
       '@vitejs/plugin-vue': 2.0.1_vite@2.7.9+vue@3.2.26
       naive-ui: 2.23.2_vue@3.2.26
       typescript: 4.5.4
@@ -580,6 +582,10 @@ packages:
 
   /@humanwhocodes/object-schema/1.2.1:
     resolution: {integrity: sha1-tSBSnsIdjllFoYUd/Rwy6U45/0U=, tarball: '@humanwhocodes/object-schema/download/@humanwhocodes/object-schema-1.2.1.tgz'}
+    dev: true
+
+  /@iconify/json/1.1.451:
+    resolution: {integrity: sha512-A+GgU4xetmBfofDQSBNENRsbZo3vMZTF4pkCxFObWs+y9j/C/oGwJwqiV3yrU9jFecF/MkffBbwNFug8j5EAtw==, tarball: '@iconify/json/download/@iconify/json-1.1.451.tgz'}
     dev: true
 
   /@iconify/types/1.0.12:

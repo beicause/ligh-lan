@@ -3,7 +3,10 @@ import fs from 'fs'
 import sirv from 'sirv'
 import http from 'http'
 import connect from 'connect'
+import { join } from 'path'
 import os from 'os'
+
+let _server = null as http.Server | null
 
 const _electron = {
   mkDir(path: string) {
@@ -19,35 +22,45 @@ const _electron = {
     if (fs.statSync(path).isFile()) fs.unlinkSync(path)
     else {
       const files = fs.readdirSync(path)
-      files.forEach(f => _electron.remove(f))
+      files.forEach(f => this.remove(f))
       fs.rmdirSync(path)
     }
+  },
+  isFile(path: string) {
+    return fs.statSync(path).isFile()
   },
   async serveDir(
     path: string,
     port: number,
-    hostname = '0.0.0.0'
-  ): Promise<string[]> {
+    hostname: string
+  ): Promise<{ type: 'local' | 'network'; address: string; port: number }[]> {
     return new Promise(resolve => {
       const middleware = connect()
-      const server = http.createServer(middleware)
+      _server = http.createServer(middleware)
       middleware.use(sirv(path))
-      server.listen(port, hostname, () => {
+      middleware.use(sirv(join(__dirname, './page')))
+
+      _server.listen(port, hostname, () => {
         const address = Object.values(os.networkInterfaces())
           .flatMap(nInterface => nInterface ?? [])
           .filter(
             detail => detail && detail.address && detail.family === 'IPv4'
           )
           .map(detail => {
-            const type = detail.address.includes('127.0.0.1')
-              ? 'Local:   '
-              : 'Network: '
-            const host = detail.address
-            const url = `${host}:${port}`
-            return `${type} ${url}`
+            const type: 'local' | 'network' = detail.address.includes(
+              '127.0.0.1'
+            )
+              ? 'local'
+              : 'network'
+            return { type, address: detail.address, port }
           })
         return resolve(address)
       })
+    })
+  },
+  async serveStop() {
+    return new Promise(resolve => {
+      _server?.close(() => resolve(undefined))
     })
   },
   copy(path: string, newPath: string) {

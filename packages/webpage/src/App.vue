@@ -1,18 +1,11 @@
 <script setup lang="ts">
-import { GlobalThemeOverrides } from 'naive-ui'
-const themeOverrides:GlobalThemeOverrides={
-  common:{
-    primaryColor:'#2196f3',
-    primaryColorHover:'#2196f3',
-    primaryColorPressed:'#0a70c2'
-  }
-}
+import { darkTheme } from 'naive-ui'
 
 </script>
 
 <template>
-  <NConfigProvider :theme-overrides="themeOverrides">
-    <router-view></router-view>
+  <NConfigProvider :theme="darkTheme">
+      <router-view></router-view>
   </NConfigProvider>
 </template>
 
