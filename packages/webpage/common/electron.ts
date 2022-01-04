@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
+
 const _electron = {
-  _server: null as http.Server | null,
   mkDir(path: string) {
     fs.mkdirSync(path)
   },
@@ -10,6 +10,9 @@ const _electron = {
   },
   readFile(path: string) {
     return fs.readFileSync(path).toString()
+  },
+  writeFile(path: string, data: string) {
+    fs.writeFileSync(path, data)
   },
   remove(path: string) {
     if (fs.statSync(path).isFile()) fs.unlinkSync(path)
@@ -29,10 +32,11 @@ const _electron = {
   ): Promise<{ type: 'local' | 'network'; address: string; port: number }[]> {
     return new Promise(resolve => {
       const middleware = connect()
-      this._server = http.createServer(middleware)
+      _server = http.createServer(middleware)
       middleware.use(sirv(path))
       middleware.use(sirv(join(__dirname, './page')))
-      this._server.listen(port, hostname, () => {
+
+      _server.listen(port, hostname, () => {
         const address = Object.values(os.networkInterfaces())
           .flatMap(nInterface => nInterface ?? [])
           .filter(
@@ -51,7 +55,9 @@ const _electron = {
     })
   },
   async serveStop() {
-    return new Promise(resolve => this._server?.close(resolve))
+    return new Promise(resolve => {
+      _server?.close(() => resolve(undefined))
+    })
   },
   copy(path: string, newPath: string) {
     fs.cpSync(path, newPath)

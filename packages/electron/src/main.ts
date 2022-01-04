@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, nativeTheme } from 'electron'
 import * as path from 'path'
 
 const page = path.join(__dirname, './page')
@@ -11,8 +11,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     }
   })
-  if (process.env.DEBUG) mainWindow.loadURL('http://localhost:3000/')
-  else mainWindow.loadFile(path.join(page, 'index.html'))
+  // if (process.env.DEBUG) mainWindow.loadURL('http://localhost:3000/')
+  mainWindow.loadFile(path.join(page, 'index.html'))
   mainWindow.webContents.openDevTools()
 }
 
@@ -29,7 +29,7 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
-
+nativeTheme.themeSource = 'dark'
 ipcMain.on('openDialog', (event, options: Electron.OpenDialogOptions) => {
   dialog
     .showOpenDialog(options)

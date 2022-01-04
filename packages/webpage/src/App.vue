@@ -5,7 +5,7 @@ import { darkTheme } from 'naive-ui'
 
 <template>
   <NConfigProvider :theme="darkTheme">
-      <router-view></router-view>
+      <NMessageProvider><router-view></router-view></NMessageProvider>
   </NConfigProvider>
 </template>
 

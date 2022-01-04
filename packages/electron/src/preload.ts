@@ -18,7 +18,11 @@ const _electron = {
   readFile(path: string) {
     return fs.readFileSync(path).toString()
   },
+  writeFile(path: string, data: string) {
+    fs.writeFileSync(path, data)
+  },
   remove(path: string) {
+    if (!fs.existsSync(path)) return
     if (fs.statSync(path).isFile()) fs.unlinkSync(path)
     else {
       const files = fs.readdirSync(path)
@@ -34,12 +38,21 @@ const _electron = {
     port: number,
     hostname: string
   ): Promise<{ type: 'local' | 'network'; address: string; port: number }[]> {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const middleware = connect()
       _server = http.createServer(middleware)
       middleware.use(sirv(path))
       middleware.use(sirv(join(__dirname, './page')))
-
+      const onError = (e: Error & { code?: string }) => {
+        if (e.code === 'EADDRINUSE') {
+          _server!.removeListener('error', onError)
+          reject(new Error(`Port ${port} is already in use`))
+        } else {
+          _server!.removeListener('error', onError)
+          reject(e)
+        }
+      }
+      _server.addListener('error', onError)
       _server.listen(port, hostname, () => {
         const address = Object.values(os.networkInterfaces())
           .flatMap(nInterface => nInterface ?? [])
@@ -54,6 +67,7 @@ const _electron = {
               : 'network'
             return { type, address: detail.address, port }
           })
+        _server!.removeListener('error', onError)
         return resolve(address)
       })
     })
