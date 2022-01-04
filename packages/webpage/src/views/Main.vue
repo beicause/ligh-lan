@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, h, VNode, onUnmounted } from 'vue'
+import { computed, ref, h, VNode, onUnmounted, watch } from 'vue'
 import { electron } from '../../common/electron'
 import AkarIconsFile from '~icons/akar-icons/file'
 import AlarityDirectorySolid from '~icons/clarity/directory-solid'
 import CarbonDownload from '~icons/carbon/download'
 import axios from 'axios'
 import { NButton, NEllipsis, useMessage } from 'naive-ui'
+import path from 'path/posix'
 
 type FileNode = { type: 'file', path: string } | { type: 'dir', path: string, children: FileNode[] }
 const message = useMessage()
@@ -19,8 +20,10 @@ const serverRoot = ref('')
 const currentDir = ref('')
 const ip = ref('0.0.0.0')
 const port = ref(9980)
-const iframeFile = ref('')
-const pathHistory = ref([] as FileNode[])
+const displayFile = ref(undefined as { path: string, href: string, ext: string } | undefined)
+const displayImg = ref('')
+const displayText = ref('')
+const historyPath = ref([] as FileNode[])
 const historyPoint = ref(0)
 const tmpFileName = 'ligh_lan_file_data.json'
 const fileInfoFile = computed(() => serverRoot.value + '/' + tmpFileName)
@@ -53,7 +56,7 @@ axios.get(tmpFileName).then(res => {
     if (!fileInfo.value) return
     currentDir.value = fileInfo.value.path
     serverRoot.value = currentDir.value
-    pathHistory.value.push(fileInfo.value)
+    historyPath.value.push(fileInfo.value)
 }).catch(err => console.log(err))
 
 function getFileInfo(root: string): FileNode {
@@ -80,10 +83,6 @@ function openDir() {
             if (res.length === 0) return
             stop()
             serverRoot.value = res[0]
-            currentDir.value = serverRoot.value
-            fileInfo.value = getFileInfo(serverRoot.value)
-            writeFileInfo()
-            pathHistory.value.push(fileInfo.value)
             serve()
         })
 }
@@ -95,15 +94,15 @@ window.ondrop = (e) => {
     if (e.dataTransfer?.files[0]) {
         stop()
         serverRoot.value = e.dataTransfer.files[0].path
-        currentDir.value = serverRoot.value
-        fileInfo.value = getFileInfo(serverRoot.value)
-        writeFileInfo()
-        pathHistory.value.push(fileInfo.value)
         serve()
     }
 }
 
 function serve() {
+    currentDir.value = serverRoot.value
+    fileInfo.value = getFileInfo(serverRoot.value)
+    writeFileInfo()
+    historyPath.value.push(fileInfo.value)
     electron?.serveDir(currentDir.value, port.value, ip.value).then(_address => {
         if (ip.value === '127.0.0.1') trueAddress.value = [{ type: 'local', address: '127.0.0.1', port: port.value }]
         else trueAddress.value = _address
@@ -112,13 +111,14 @@ function serve() {
 async function stop() {
     electron?.remove(fileInfoFile.value)
     trueAddress.value = []
+    clearData()
     return await electron?.serveStop()
 }
 function clearData() {
     trueAddress.value = [] as { type: 'local' | 'network', address: string, port: number }[]
     currentDir.value = ''
-    iframeFile.value = ''
-    pathHistory.value = []
+    displayFile.value = undefined
+    historyPath.value = []
     historyPoint.value = 0
     fileInfo.value = undefined
 }
@@ -144,23 +144,23 @@ const menu = computed(() =>
 )
 function onClickMenu(_key: string) {
     const key = JSON.parse(_key) as FileNode
-    if (key.type === 'file') iframeFile.value = getFileHref(key.path)
+    if (key.type === 'file') displayFile.value = file(key.path)
     else currentDir.value = key.path
-    const point = historyPoint.value + pathHistory.value.length - 1
-    if (point >= 0) pathHistory.value = pathHistory.value.slice(0, point + 1)
-    pathHistory.value.push(key)
+    const point = historyPoint.value + historyPath.value.length - 1
+    if (point >= 0) historyPath.value = historyPath.value.slice(0, point + 1)
+    historyPath.value.push(key)
     historyPoint.value = 0
 }
 
 const freshPath = () => {
-    const point = pathHistory.value[historyPoint.value + pathHistory.value.length - 1]
-    iframeFile.value = ''
+    const point = historyPath.value[historyPoint.value + historyPath.value.length - 1]
+    displayFile.value = undefined
     if (point.type === 'dir') currentDir.value = point.path
-    else iframeFile.value = iframeFile.value = getFileHref(point.path)
+    else displayFile.value = file(point.path)
 }
 function back() {
     historyPoint.value--
-    const point = pathHistory.value[historyPoint.value + pathHistory.value.length - 1]
+    const point = historyPath.value[historyPoint.value + historyPath.value.length - 1]
     if (!point) {
         historyPoint.value++
         return
@@ -169,7 +169,7 @@ function back() {
 }
 function forward() {
     historyPoint.value++
-    const point = pathHistory.value[historyPoint.value + pathHistory.value.length - 1]
+    const point = historyPath.value[historyPoint.value + historyPath.value.length - 1]
     if (!point) {
         historyPoint.value--
         return
@@ -177,9 +177,40 @@ function forward() {
     freshPath()
 }
 
+function file(path: string) {
+    return {
+        path,
+        href: getFileHref(path),
+        ext: getFileExt(path)
+    }
+}
 function getFileHref(path: string) {
     return path.replace(serverRoot.value, '.')
 }
+function getFileExt(path: string) {
+    return path.substring(path.lastIndexOf('.'))
+}
+
+const imgExt = ['apng', 'avif', 'gif', 'jpeg', 'jpg', 'png', 'svg', 'webp'].map(f => '.' + f)
+
+watch(() => displayFile.value, file => {
+    if (!file) {
+        displayImg.value = ''
+        displayText.value = ''
+        return
+    }
+    if (imgExt.indexOf(file.ext) !== -1) {
+        if (electron) displayImg.value = file.path
+        else displayImg.value = file.href
+    }
+    else {
+        if (electron) displayText.value = electron.readFile(file.path)
+        axios.get(file.href, { responseType: 'text' }).then(res => {
+            displayText.value = res.data
+        })
+    }
+})
+
 onUnmounted(() => stop())
 
 </script>
@@ -213,11 +244,7 @@ onUnmounted(() => stop())
                 </span>
                 {{ isServing ? '' : '服务未开启' }}
             </NAlert>
-            <NButton
-                v-if="isServing"
-                @click="() => { stop().then(() => clearData()) }"
-                class="ml-4"
-            >关闭服务</NButton>
+            <NButton v-if="isServing" @click="stop" class="ml-4">关闭服务</NButton>
         </div>
 
         <div v-if="!isServing" class="h-3/4 flex justify-center items-center">
@@ -242,7 +269,7 @@ onUnmounted(() => stop())
             </NButtonGroup>
 
             <NLayoutContent
-                v-if="!iframeFile"
+                v-show="!displayFile"
                 class="mt-4"
                 style="height: 80vh;"
                 :native-scrollbar="false"
@@ -251,12 +278,10 @@ onUnmounted(() => stop())
                     <NMenu @update-value="onClickMenu" :options="menu"></NMenu>
                 </NCard>
             </NLayoutContent>
-            <iframe
-                v-else
-                style="height: 80vh;"
-                class="w-full border-none mt-4 mx-4"
-                :src="iframeFile"
-            ></iframe>
+            <div v-show="displayFile" style="height: 80vh;" class="w-full p-4">
+                <img :src="displayImg" class="m-auto" />
+                <NText>{{ displayText }}</NText>
+            </div>
         </div>
     </NLayout>
 </template>
