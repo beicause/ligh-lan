@@ -33,7 +33,7 @@
     "sirv": "^2.0.0"
   },
   "build": {
-    "appId": "your.id",
+    "appId": "com.qingcheng.ligh_lan",
     "files": [
       "dist/**/*",
       "package.json"
