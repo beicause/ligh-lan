@@ -11,8 +11,9 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     }
   })
-  // if (process.env.DEBUG) mainWindow.loadURL('http://localhost:3000/')
-  mainWindow.loadFile(path.join(page, 'index.html'))
+  if (process.env.ELECTRON_PAGE_DEBUG)
+    mainWindow.loadURL('http://localhost:3000/')
+  else mainWindow.loadFile(path.join(page, 'index.html'))
   mainWindow.webContents.openDevTools()
 }
 

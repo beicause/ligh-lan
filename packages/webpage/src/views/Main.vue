@@ -3,8 +3,9 @@ import { computed, ref, h, VNode, onUnmounted } from 'vue'
 import { electron } from '../../common/electron'
 import AkarIconsFile from '~icons/akar-icons/file'
 import AlarityDirectorySolid from '~icons/clarity/directory-solid'
+import CarbonDownload from '~icons/carbon/download'
 import axios from 'axios'
-import { useMessage } from 'naive-ui'
+import { NButton, useMessage } from 'naive-ui'
 
 type FileNode = { type: 'file', path: string } | { type: 'dir', path: string, children: FileNode[] }
 const message = useMessage()
@@ -24,33 +25,25 @@ const historyPoint = ref(0)
 const tmpFileName = 'ligh_lan_file_data.json'
 const fileInfoFile = computed(() => serverRoot.value + '/' + tmpFileName)
 
-const dirChildrenName = computed(() => {
+const dirChildren = computed(() => {
     if (!(fileInfo.value?.type === 'dir')) return []
-    let children = [] as { name: string, type: 'dir' | 'file' }[]
+    let children = [] as FileNode[]
 
-    const resolveChildren = (nodes: FileNode[]) => {
-        children = nodes.map(child => {
-            return {
-                name: child.path.replace(currentDir.value + '/', ''),
-                type: child.type
-            }
-        })
-    }
     const search = (node: FileNode) => {
         if (!(node.type === 'dir')) return
         if (node.path === currentDir.value) {
-            resolveChildren(node.children)
+            children = node.children
             return
         }
-        node.children.forEach(c => {
+        for (const c of node.children) {
             if (c.type === 'dir') {
                 if (c.path === currentDir.value) {
-                    resolveChildren(c.children)
+                    children = c.children
                     return
                 }
                 else search(c)
             }
-        })
+        }
     }
     search(fileInfo.value)
     return children
@@ -94,7 +87,7 @@ function openDir() {
             serve()
         })
 }
-window.ondragover=e=>{
+window.ondragover = e => {
     e.preventDefault()
 }
 window.ondrop = (e) => {
@@ -130,17 +123,26 @@ function clearData() {
     fileInfo.value = undefined
 }
 const menu = computed(() =>
-    dirChildrenName.value.map((file, index) => {
+    dirChildren.value.map((file) => {
         return {
-            label: () => h('span', file.name),
-            key: JSON.stringify({ path: currentDir.value + '/' + file.name, type: file.type }),
+            label: () => file.type === 'dir'
+                ? h('span', file.path.substring(file.path.lastIndexOf('/') + 1))
+                : h('div',
+                    { style: { display: 'flex', justifyContent: 'space-between' } },
+                    [
+                        file.path.substring(file.path.lastIndexOf('/') + 1),
+                        h(NButton,
+                            { tag: 'a', href: getFileHref(file.path), download: getFileHref(file.path), onClick: e => e.stopPropagation() },
+                            { default: () => h(CarbonDownload) })
+                    ]),
+            key: JSON.stringify({ path: file.path, type: file.type }),
             icon: () => file.type === 'file' ? h(AkarIconsFile) : h(AlarityDirectorySolid)
         } as { label: () => VNode, key: string, icon: () => VNode }
     })
 )
 function onClickMenu(_key: string) {
     const key = JSON.parse(_key) as FileNode
-    if (key.type === 'file') iframeFile.value = key.path.replace(serverRoot.value, '')
+    if (key.type === 'file') iframeFile.value = getFileHref(key.path)
     else currentDir.value = key.path
     const point = historyPoint.value + pathHistory.value.length - 1
     if (point >= 0) pathHistory.value = pathHistory.value.slice(0, point + 1)
@@ -152,7 +154,7 @@ const freshPath = () => {
     const point = pathHistory.value[historyPoint.value + pathHistory.value.length - 1]
     iframeFile.value = ''
     if (point.type === 'dir') currentDir.value = point.path
-    else iframeFile.value = iframeFile.value = point.path.replace(serverRoot.value, '')
+    else iframeFile.value = iframeFile.value = getFileHref(point.path)
 }
 function back() {
     historyPoint.value--
@@ -173,6 +175,9 @@ function forward() {
     freshPath()
 }
 
+function getFileHref(path: string) {
+    return path.replace(serverRoot.value, '.')
+}
 onUnmounted(() => stop())
 
 </script>

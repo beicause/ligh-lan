@@ -9,6 +9,7 @@
     "copy-page": "rimraf ./dist/page && node ../../scripts/copy_page.js",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
     "start": "electron ./dist/main.js",
+    "dev-page":"export ELECTRON_PAGE_DEBUG=1 && pnpm start",
     "pack": "electron-builder --dir",
     "out": "electron-builder"
   },

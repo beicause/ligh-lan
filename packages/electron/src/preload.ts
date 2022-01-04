@@ -77,9 +77,6 @@ const _electron = {
       _server?.close(() => resolve(undefined))
     })
   },
-  copy(path: string, newPath: string) {
-    fs.cpSync(path, newPath)
-  },
   async openDialog(options: Electron.OpenDialogOptions): Promise<string[]> {
     ipcRenderer.send('openDialog', options)
     return new Promise(resolve =>
