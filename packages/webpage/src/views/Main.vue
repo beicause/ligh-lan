@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, h, VNode, onUnmounted, watch } from 'vue'
-import { electron } from '../../common/electron'
+// @ts-nocheck
 import AkarIconsFile from '~icons/akar-icons/file'
 import AlarityDirectorySolid from '~icons/clarity/directory-solid'
 import CarbonDownload from '~icons/carbon/download'
+// @ts-check
+import { computed, ref, h, VNode, watch, onUnmounted, onBeforeUnmount } from 'vue'
+import { electron } from '../../common/electron'
 import axios from 'axios'
 import { NButton, NEllipsis, useMessage } from 'naive-ui'
-import path from 'path/posix'
 
 type FileNode = { type: 'file', path: string } | { type: 'dir', path: string, children: FileNode[] }
 const message = useMessage()
@@ -26,7 +27,11 @@ const displayText = ref('')
 const historyPath = ref([] as FileNode[])
 const historyPoint = ref(0)
 const tmpFileName = 'ligh_lan_file_data.json'
-const fileInfoFile = computed(() => serverRoot.value + '/' + tmpFileName)
+const fileInfoFile = computed(() => {
+    const path = serverRoot.value + '/' + tmpFileName
+    electron?.sendTmpFile(path)
+    return path
+})
 
 const dirChildren = computed(() => {
     if (!(fileInfo.value?.type === 'dir')) return []
@@ -210,8 +215,8 @@ watch(() => displayFile.value, file => {
         })
     }
 })
-
-onUnmounted(() => stop())
+// it seems useless
+// onBeforeUnmount(()=>stop())
 
 </script>
 
@@ -244,7 +249,7 @@ onUnmounted(() => stop())
                 </span>
                 {{ isServing ? '' : '服务未开启' }}
             </NAlert>
-            <NButton v-if="isServing" @click="stop" class="ml-4">关闭服务</NButton>
+            <NButton v-if="isServing" @click="stop">关闭服务</NButton>
         </div>
 
         <div v-if="!isServing" class="h-3/4 flex justify-center items-center">
@@ -285,10 +290,3 @@ onUnmounted(() => stop())
         </div>
     </NLayout>
 </template>
-
-<style>
-::-webkit-scrollbar {
-    display: none;
-    border: 0;
-}
-</style>

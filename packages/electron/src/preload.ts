@@ -23,12 +23,7 @@ const _electron = {
   },
   remove(path: string) {
     if (!fs.existsSync(path)) return
-    if (fs.statSync(path).isFile()) fs.unlinkSync(path)
-    else {
-      const files = fs.readdirSync(path)
-      files.forEach(f => this.remove(f))
-      fs.rmdirSync(path)
-    }
+    fs.rmSync(path, { recursive: true })
   },
   isFile(path: string) {
     return fs.statSync(path).isFile()
@@ -82,6 +77,9 @@ const _electron = {
     return new Promise(resolve =>
       ipcRenderer.on('openDialogReply', (_, args) => resolve(args))
     )
+  },
+  sendTmpFile(path: string) {
+    ipcRenderer.send('tmpFile', path)
   }
 }
 

@@ -1,5 +1,13 @@
-import { app, BrowserWindow, dialog, ipcMain, nativeTheme } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  ipcRenderer,
+  nativeTheme
+} from 'electron'
 import * as path from 'path'
+import fs from 'fs'
 
 const page = path.join(__dirname, './page')
 let mainWindow = null as null | BrowserWindow
@@ -30,6 +38,16 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+let tmpFile = ''
+
+app.on('before-quit', () => {
+  tmpFile && fs.rmSync(tmpFile)
+})
+ipcMain.on('tmpFile', (event, args) => {
+  tmpFile = args
+})
+
 nativeTheme.themeSource = 'dark'
 ipcMain.on('openDialog', (event, options: Electron.OpenDialogOptions) => {
   dialog
