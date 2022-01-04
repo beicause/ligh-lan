@@ -5,7 +5,7 @@ import AkarIconsFile from '~icons/akar-icons/file'
 import AlarityDirectorySolid from '~icons/clarity/directory-solid'
 import CarbonDownload from '~icons/carbon/download'
 import axios from 'axios'
-import { NButton, useMessage } from 'naive-ui'
+import { NButton, NEllipsis, useMessage } from 'naive-ui'
 
 type FileNode = { type: 'file', path: string } | { type: 'dir', path: string, children: FileNode[] }
 const message = useMessage()
@@ -18,7 +18,7 @@ const isServing = computed(() => {
 const serverRoot = ref('')
 const currentDir = ref('')
 const ip = ref('0.0.0.0')
-const port = ref('9980')
+const port = ref(9980)
 const iframeFile = ref('')
 const pathHistory = ref([] as FileNode[])
 const historyPoint = ref(0)
@@ -104,8 +104,8 @@ window.ondrop = (e) => {
 }
 
 function serve() {
-    electron?.serveDir(currentDir.value, parseInt(port.value), ip.value).then(_address => {
-        if (ip.value === '127.0.0.1') trueAddress.value = [{ type: 'local', address: '127.0.0.1', port: parseInt(port.value) }]
+    electron?.serveDir(currentDir.value, port.value, ip.value).then(_address => {
+        if (ip.value === '127.0.0.1') trueAddress.value = [{ type: 'local', address: '127.0.0.1', port: port.value }]
         else trueAddress.value = _address
     }).catch(err => message.error('启动失败'))
 }
@@ -122,15 +122,17 @@ function clearData() {
     historyPoint.value = 0
     fileInfo.value = undefined
 }
+
+const renderFileName = (file: string) => h(NEllipsis, null, { default: () => file.substring(file.lastIndexOf('/') + 1) })
 const menu = computed(() =>
     dirChildren.value.map((file) => {
         return {
             label: () => file.type === 'dir'
-                ? h('span', file.path.substring(file.path.lastIndexOf('/') + 1))
+                ? renderFileName(file.path)
                 : h('div',
                     { style: { display: 'flex', justifyContent: 'space-between' } },
                     [
-                        file.path.substring(file.path.lastIndexOf('/') + 1),
+                        renderFileName(file.path),
                         h(NButton,
                             { tag: 'a', href: getFileHref(file.path), download: getFileHref(file.path), onClick: e => e.stopPropagation() },
                             { default: () => h(CarbonDownload) })
@@ -185,34 +187,26 @@ onUnmounted(() => stop())
 <template>
     <NLayout class="h-screen box-border" position="absolute">
         <NLayoutHeader class="mx-2 mt-2">
-            <NH1>局域网共享</NH1>
+            <NH1>局域网共享{{ electron ? '——服务端' : '' }}</NH1>
         </NLayoutHeader>
 
-        <div class="flex items-center">
-            <NInputGroup class="w-140 ml-4">
-                <NInputGroupLabel>IP</NInputGroupLabel>
-                <div>
-                    <NInput v-model:value="ip"></NInput>
-                </div>
-
-                <NInputGroupLabel>端口</NInputGroupLabel>
-                <div>
-                    <NInput v-model:value="port"></NInput>
-                </div>
-            </NInputGroup>
-            <NButton
-                :disabled="!electron"
-                circle
-                class="mr-4"
-                @click="() => { stop().then(() => serve()) }"
-            >
-                <template #icon>
-                    <NIcon size="18">
-                        <i-el-refresh></i-el-refresh>
-                    </NIcon>
-                </template>
-            </NButton>
-            <NAlert :type="isServing ? 'success' : 'info'">
+        <div class="flex items-center flex-wrap" v-if="electron">
+            <div class="flex max-w-1/1">
+                <NInputGroup class="px-3">
+                    <NInputGroupLabel style="min-width: 36px;">IP</NInputGroupLabel>
+                    <NInput style="width: 240px;" v-model:value="ip"></NInput>
+                    <NInputGroupLabel style="min-width: 52px;">端口</NInputGroupLabel>
+                    <NInputNumber style="width: 240px;" :show-button="false" v-model:value="port"></NInputNumber>
+                </NInputGroup>
+                <NButton circle @click="() => { stop().then(() => serve()) }">
+                    <template #icon>
+                        <NIcon size="18">
+                            <i-el-refresh></i-el-refresh>
+                        </NIcon>
+                    </template>
+                </NButton>
+            </div>
+            <NAlert class="m-4" :type="isServing ? 'success' : 'info'">
                 <span v-for="address in trueAddress">
                     {{ `${address.type === 'local' ? '本地' : '网络'}: ${address.address.replace('127.0.0.1', 'localhost')}:${address.port}` }}
                     <br />
@@ -220,7 +214,7 @@ onUnmounted(() => stop())
                 {{ isServing ? '' : '服务未开启' }}
             </NAlert>
             <NButton
-                v-if="isServing && electron"
+                v-if="isServing"
                 @click="() => { stop().then(() => clearData()) }"
                 class="ml-4"
             >关闭服务</NButton>
@@ -230,7 +224,7 @@ onUnmounted(() => stop())
             <NButton ghost type="primary" @click="openDir" size="large">选择或拖拽文件夹</NButton>
         </div>
         <div v-else>
-            <NButtonGroup class="ml-4 mt-4">
+            <NButtonGroup class="ml-4">
                 <NButton @click="back">
                     <template #icon>
                         <NIcon>
@@ -250,7 +244,7 @@ onUnmounted(() => stop())
             <NLayoutContent
                 v-if="!iframeFile"
                 class="mt-4"
-                style="height: 75vh;"
+                style="height: 80vh;"
                 :native-scrollbar="false"
             >
                 <NCard>
@@ -259,7 +253,7 @@ onUnmounted(() => stop())
             </NLayoutContent>
             <iframe
                 v-else
-                style="height: 75vh;"
+                style="height: 80vh;"
                 class="w-full border-none mt-4 mx-4"
                 :src="iframeFile"
             ></iframe>
