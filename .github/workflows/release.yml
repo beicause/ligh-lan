@@ -1,7 +1,8 @@
-name: Test
+name: Release
 on:
   push:
-  pull_request:
+    tags:
+      - "v*"
 env:
   FORCE_COLOR: 2
 jobs:
@@ -17,7 +18,7 @@ jobs:
           - os: windows-latest
             node_version: 16
       fail-fast: false
-    name: Build&Test,Node.js ${{ matrix.node-version }}
+    name: Build&Test,${{ matrix.os }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
@@ -40,10 +41,7 @@ jobs:
       - name: Run lint
         run: pnpm lint && cd packages/webpage && pnpm check
 
-      - name: Build ts and page
-        run: cd packages/electron && pnpm build && pnpm build-page
-      - name: Release
-        uses: samuelmeuli/action-electron-builder@v1
-        with:
-          github_token: ${{GITHUB_TOKEN}}
-          release: ${{startWith(github.ref,'refs/tags/v')}}
+      - name: Build ts, page, and release
+        run: cd packages/electron && pnpm build && pnpm build-page && pnpm release
+        env:
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
