@@ -41,6 +41,4 @@ jobs:
         run: pnpm lint && cd packages/webpage && pnpm check
 
       - name: Build
-        run: cd packages/electron && pnpm build && pnpm build-page && pnpm out
-        env:
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        run: pnpm build

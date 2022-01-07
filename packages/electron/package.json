@@ -12,7 +12,7 @@
     "start": "cross-env ELECTRON_DEV_TOOLS=1 electron ./dist/main.js",
     "dev-server": "cross-env ELECTRON_SERVER_DEBUG=1 pnpm start",
     "pack": "electron-builder --dir",
-    "out": "electron-builder",
+    "out": "electron-builder -p never",
     "release": "electron-builder -p always"
   },
   "license": "Apache-2.0",

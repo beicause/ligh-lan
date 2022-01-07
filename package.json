@@ -9,7 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint --ext .ts packages/*/src/**.ts",
     "format": "prettier --write --parser typescript \"packages/**/*.ts?(x)\"",
-    "build": "cd packages/webpage && pnpm build && cd ../electron && pnpm build && pnpm out",
+    "build": "cd packages/electron && pnpm build && pnpm build-page && pnpm out",
     "prepare": "husky install"
   },
   "lint-staged": {
