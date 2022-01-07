@@ -26,3 +26,7 @@ pnpm i
 ```
 pnpm build
 ```
+
+## Notice
+
+DON'T  share sensitive information unless you know what you are doing. For example, your bank card PIN or your credit card expiry date. 
