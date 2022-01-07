@@ -17,7 +17,7 @@ jobs:
           - os: windows-latest
             node_version: 16
       fail-fast: false
-    name: Build&Test,Node.js ${{ matrix.node-version }}
+    name: Build&Test,${{ matrix.os }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
