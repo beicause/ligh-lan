@@ -1,11 +1,4 @@
-import {
-  app,
-  BrowserWindow,
-  dialog,
-  ipcMain,
-  ipcRenderer,
-  nativeTheme
-} from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, nativeTheme } from 'electron'
 import * as path from 'path'
 import fs from 'fs'
 
@@ -16,7 +9,8 @@ function createWindow() {
     height: 900,
     width: 1300,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: !process.env.ELECTRON_PAGE_DEBUG
     }
   })
   if (process.env.ELECTRON_PAGE_DEBUG)
@@ -39,16 +33,9 @@ app.on('window-all-closed', () => {
   }
 })
 
-let tmpFile = ''
-
-app.on('before-quit', () => {
-  tmpFile && fs.rmSync(tmpFile)
-})
-ipcMain.on('tmpFile', (event, args) => {
-  tmpFile = args
-})
-
+app.applicationMenu = null
 nativeTheme.themeSource = 'dark'
+
 ipcMain.on('openDialog', (event, options: Electron.OpenDialogOptions) => {
   dialog
     .showOpenDialog(options)
@@ -56,4 +43,20 @@ ipcMain.on('openDialog', (event, options: Electron.OpenDialogOptions) => {
       event.reply('openDialogReply', res.filePaths)
     })
     .catch(err => console.log(err))
+})
+
+ipcMain.on('resetFile', e => {
+  e.reply('resetFileReply')
+})
+
+ipcMain.on('fileInfo', (e, args) => {
+  e.reply('fileInfoReply', args)
+})
+ipcMain.on('resetFileComplete', e => {
+  e.reply('resetFileCompleteReply')
+})
+
+ipcMain.on('appRelaunch', () => {
+  app.relaunch()
+  app.quit()
 })

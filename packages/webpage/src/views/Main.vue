@@ -3,14 +3,16 @@
 import AkarIconsFile from '~icons/akar-icons/file'
 import AlarityDirectorySolid from '~icons/clarity/directory-solid'
 import CarbonDownload from '~icons/carbon/download'
+import CarbonDelete from '~icons/carbon/delete'
 // @ts-check
-import { computed, ref, h, VNode, watch, onUnmounted, onBeforeUnmount } from 'vue'
+import { computed, ref, h, VNode, watch } from 'vue'
 import { electron } from '../../common/electron'
 import axios from 'axios'
-import { NButton, NEllipsis, useMessage } from 'naive-ui'
+import { NButton, NEllipsis, useDialog, useMessage } from 'naive-ui'
 
 type FileNode = { type: 'file', path: string } | { type: 'dir', path: string, children: FileNode[] }
 const message = useMessage()
+const dialog = useDialog()
 const fileInfo = ref(undefined as FileNode | undefined)
 const trueAddress = ref([] as { type: 'local' | 'network', address: string, port: number }[])
 const isServing = computed(() => {
@@ -26,13 +28,12 @@ const displayImg = ref('')
 const displayText = ref('')
 const historyPath = ref([] as FileNode[])
 const historyPoint = ref(0)
-const tmpFileName = 'ligh_lan_file_data.json'
-const fileInfoFile = computed(() => {
-    const path = serverRoot.value + '/' + tmpFileName
-    electron?.sendTmpFile(path)
-    return path
-})
-
+const showModel = ref(false)
+const inputFileName = ref('')
+const inputType = ref('file' as 'file' | 'dir')
+const editMode = ref(false)
+const editText = ref('')
+let ws = null as WebSocket | null
 const dirChildren = computed(() => {
     if (!(fileInfo.value?.type === 'dir')) return []
     let children = [] as FileNode[]
@@ -56,15 +57,32 @@ const dirChildren = computed(() => {
     search(fileInfo.value)
     return children
 })
-axios.get(tmpFileName).then(res => {
-    fileInfo.value = res.data
-    if (!fileInfo.value) return
-    currentDir.value = fileInfo.value.path
-    serverRoot.value = currentDir.value
-    historyPath.value.push(fileInfo.value)
-}).catch(err => console.log(err))
-
-function getFileInfo(root: string): FileNode {
+function receiveWs() {
+    ws.onmessage = res => {
+        const data = JSON.parse(res.data)
+        switch (data.mode) {
+            case 'fileInfo':
+                fileInfo.value = JSON.parse(data.data)
+                if (fileInfo.value) {
+                    currentDir.value = fileInfo.value.path
+                    serverRoot.value = currentDir.value
+                    if (historyPath.value.length === 0) historyPath.value.push(fileInfo.value)
+                }
+                break
+            case 'ioe':
+                message.error(data.message)
+                break
+            case 'fileWritten':
+                changeDisplayText(displayFile.value)
+                break
+        }
+    }
+}
+function connectWs() {
+    ws = new WebSocket(electron ? `ws://${ip.value}:${port.value}` : `ws://${window.location.host}`)
+    ws.onopen = e => console.log('client connected')
+}
+function getRootDirInfo(root: string): FileNode {
     const dirs: string[] = electron?.readDir(root)
     return {
         type: 'dir', path: root, children: dirs.map(_dir => {
@@ -73,83 +91,61 @@ function getFileInfo(root: string): FileNode {
             const children = electron?.readDir(dir).map((d: string) => dir + '/' + d) as string[] | undefined
             if (!children || children.every(d => electron?.isFile(d)))
                 return { type: 'dir', path: dir, children: children?.map(c => { return { type: 'file', path: c } }) }
-            return getFileInfo(dir)
+            return getRootDirInfo(dir)
         })
     } as FileNode
 }
 
-function writeFileInfo() {
-    electron?.writeFile(fileInfoFile.value, JSON.stringify(fileInfo.value))
+function setFileInfo() {
+    electron?.send('fileInfo', JSON.stringify(fileInfo.value))
 }
 
 function openDir() {
-    electron?.openDialog({ title: '打开文件', properties: ['openDirectory'] })
+    electron?.openDialog({ title: 'select directory', properties: ['openDirectory'] })
         .then(res => {
             if (res.length === 0) return
-            stop()
             serverRoot.value = res[0]
             serve()
         })
 }
-window.ondragover = e => {
-    e.preventDefault()
-}
-window.ondrop = (e) => {
-    e.preventDefault()
-    if (e.dataTransfer?.files[0]) {
-        stop()
-        serverRoot.value = e.dataTransfer.files[0].path
-        serve()
-    }
-}
 
-function serve() {
+async function serve() {
     currentDir.value = serverRoot.value
-    fileInfo.value = getFileInfo(serverRoot.value)
-    writeFileInfo()
+    fileInfo.value = getRootDirInfo(serverRoot.value)
+    setFileInfo()
     historyPath.value.push(fileInfo.value)
-    electron?.serveDir(currentDir.value, port.value, ip.value).then(_address => {
-        if (ip.value === '127.0.0.1') trueAddress.value = [{ type: 'local', address: '127.0.0.1', port: port.value }]
-        else trueAddress.value = _address
-    }).catch(err => message.error('启动失败'))
-}
-async function stop() {
-    electron?.remove(fileInfoFile.value)
-    trueAddress.value = []
-    clearData()
-    return await electron?.serveStop()
-}
-function clearData() {
-    trueAddress.value = [] as { type: 'local' | 'network', address: string, port: number }[]
-    currentDir.value = ''
-    displayFile.value = undefined
-    historyPath.value = []
-    historyPoint.value = 0
-    fileInfo.value = undefined
+    const _address = await electron?.serveDir(currentDir.value, port.value, ip.value).catch(err => {
+        console.log(err)
+        message.error('fail to launch')
+    })
+    if (ip.value === '127.0.0.1') trueAddress.value = [{ type: 'local', address: '127.0.0.1', port: port.value }]
+    else trueAddress.value = _address
+    connectWs()
+    receiveWs()
 }
 
-const renderFileName = (file: string) => h(NEllipsis, null, { default: () => file.substring(file.lastIndexOf('/') + 1) })
-const menu = computed(() =>
-    dirChildren.value.map((file) => {
-        return {
-            label: () => file.type === 'dir'
-                ? renderFileName(file.path)
-                : h('div',
-                    { style: { display: 'flex', justifyContent: 'space-between' } },
-                    [
-                        renderFileName(file.path),
-                        h(NButton,
-                            { tag: 'a', href: getFileHref(file.path), download: getFileHref(file.path), onClick: e => e.stopPropagation() },
-                            { default: () => h(CarbonDownload) })
-                    ]),
-            key: JSON.stringify({ path: file.path, type: file.type }),
-            icon: () => file.type === 'file' ? h(AkarIconsFile) : h(AlarityDirectorySolid)
-        } as { label: () => VNode, key: string, icon: () => VNode }
-    })
-)
+
+
+// async function stop() {
+//     clearData()
+//     ws?.close()
+//     return await electron?.serveStop()
+// }
+
+// function clearData() {
+//     trueAddress.value = [] as { type: 'local' | 'network', address: string, port: number }[]
+//     currentDir.value = ''
+//     displayFile.value = undefined
+//     historyPath.value = []
+//     historyPoint.value = 0
+//     fileInfo.value = undefined
+// }
+
+
 function onClickMenu(_key: string) {
+    editMode.value = false
     const key = JSON.parse(_key) as FileNode
-    if (key.type === 'file') displayFile.value = file(key.path)
+    if (key.type === 'file') displayFile.value = getFileInfo(key.path)
     else currentDir.value = key.path
     const point = historyPoint.value + historyPath.value.length - 1
     if (point >= 0) historyPath.value = historyPath.value.slice(0, point + 1)
@@ -161,7 +157,7 @@ const freshPath = () => {
     const point = historyPath.value[historyPoint.value + historyPath.value.length - 1]
     displayFile.value = undefined
     if (point.type === 'dir') currentDir.value = point.path
-    else displayFile.value = file(point.path)
+    else displayFile.value = getFileInfo(point.path)
 }
 function back() {
     historyPoint.value--
@@ -182,7 +178,7 @@ function forward() {
     freshPath()
 }
 
-function file(path: string) {
+function getFileInfo(path: string) {
     return {
         path,
         href: getFileHref(path),
@@ -190,13 +186,77 @@ function file(path: string) {
     }
 }
 function getFileHref(path: string) {
-    return path.replace(serverRoot.value, '.')
+    return path.replace(serverRoot.value, '')
 }
 function getFileExt(path: string) {
     return path.substring(path.lastIndexOf('.'))
 }
+function getFileName(path: string) {
+    return path.substring(path.lastIndexOf('/') + 1)
+}
+// async function restart() {
+//     await stop()
+//     await serve()
+// }
+function newFileConfirm() {
+    if (inputType.value === 'file') {
+        ws?.send(JSON.stringify({
+            mode: 'mkFile',
+            path: currentDir.value + '/' + inputFileName.value
+        }))
+    } else {
+        ws?.send(JSON.stringify({
+            mode: 'mkDir',
+            path: currentDir.value + '/' + inputFileName.value
+        }))
+    }
+}
 
+function newFile() {
+    inputType.value = 'file'
+    showModel.value = true
+}
+function newDir() {
+    inputType.value = 'dir'
+    showModel.value = true
+}
+
+function onClickEdit() {
+    editMode.value = !editMode.value
+    if (editMode.value) {
+        editText.value = displayText.value
+    }
+    else {
+        ws?.send(JSON.stringify({
+            mode: 'writeFile',
+            path: displayFile.value?.path,
+            data: editText.value
+        }))
+        changeDisplayText(displayFile.value)
+    }
+}
+function changeDisplayImg(file: typeof displayFile.value) {
+    displayImg.value = (electron ? `http://${ip.value}:${port.value}` : '') + file.href
+}
+function changeDisplayText(file: typeof displayFile.value) {
+    axios.get((electron ? `http://${ip.value}:${port.value}` : '') + file.href,
+        { responseType: 'text', transformResponse: data => data }).then(res => {
+            displayText.value = res.data
+        })
+}
 const imgExt = ['apng', 'avif', 'gif', 'jpeg', 'jpg', 'png', 'svg', 'webp'].map(f => '.' + f)
+
+window.ondragover = e => {
+    e.preventDefault()
+}
+window.ondrop = (e) => {
+    e.preventDefault()
+    if (!isServing.value && e.dataTransfer?.files[0]) {
+        serverRoot.value = e.dataTransfer.files[0].path
+        restart()
+    }
+}
+
 
 watch(() => displayFile.value, file => {
     if (!file) {
@@ -205,87 +265,197 @@ watch(() => displayFile.value, file => {
         return
     }
     if (imgExt.indexOf(file.ext) !== -1) {
-        if (electron) displayImg.value = file.path
-        else displayImg.value = file.href
+        changeDisplayImg(file)
     }
     else {
-        if (electron) displayText.value = electron.readFile(file.path)
-        axios.get(file.href, { responseType: 'text' }).then(res => {
-            displayText.value = res.data
-        })
+        changeDisplayText(file)
     }
 })
-// it seems useless
-// onBeforeUnmount(()=>stop())
 
+electron?.on('resetFileReply', () => {
+    fileInfo.value = getRootDirInfo(serverRoot.value)
+    setFileInfo()
+    electron?.send('resetFileComplete')
+})
+
+if (!electron) {
+    connectWs()
+    receiveWs()
+}
+
+const renderFileName = (path: string) =>
+    h(NEllipsis,
+        { style: { display: 'flex', alignItems: 'center' }, tooltip: false },
+        { default: () => getFileName(path) }
+    )
+const menu = computed(() =>
+    dirChildren.value.map((file) => {
+        return {
+            label: () =>
+                h('div',
+                    { style: { display: 'flex', justifyContent: 'space-between' } },
+                    [
+                        renderFileName(file.path),
+                        h('div', [
+                            file.type === 'file' ? h(NButton,
+                                { tag: 'a', href: getFileHref(file.path), download: getFileHref(file.path), onClick: e => e.stopPropagation() },
+                                { default: () => h(CarbonDownload) }
+                            ) : null,
+                            h(NButton,
+                                {
+                                    onClick: e => {
+                                        e.stopPropagation()
+                                        dialog.warning({
+                                            onPositiveClick: () => {
+                                                ws?.send(JSON.stringify({
+                                                    mode: 'delete',
+                                                    path: file.path
+                                                }))
+                                            },
+                                            title: 'Warning',
+                                            content: 'are you sure to delete ' + getFileName(file.path) + '?',
+                                            negativeText: 'cancel',
+                                            positiveText: 'confirm'
+                                        })
+                                    }
+                                },
+                                { default: () => h(CarbonDelete) }
+                            ),
+                        ])
+                    ]),
+            key: JSON.stringify({ path: file.path, type: file.type }),
+            icon: () => file.type === 'file' ? h(AkarIconsFile) : h(AlarityDirectorySolid)
+        } as { label: () => VNode, key: string, icon: () => VNode }
+    })
+)
 </script>
 
 <template>
+    <NModal
+        v-model:show="showModel"
+        preset="dialog"
+        :title="'Create a ' + inputType"
+        positive-text="confirm"
+        @positive-click="newFileConfirm"
+        @after-leave="() => inputFileName = ''"
+    >
+        <NInput
+            :placeholder="'Enter the ' + inputType + ' name'"
+            @keyup.enter="() => { showModel = false; newFileConfirm() }"
+            v-model:value="inputFileName"
+        ></NInput>
+    </NModal>
     <NLayout class="h-screen box-border" position="absolute">
-        <NLayoutHeader class="mx-2 mt-2">
-            <NH1>局域网共享{{ electron ? '——服务端' : '' }}</NH1>
+        <NLayoutHeader class="mx-2 mt-2 mb-4 overflow-hidden" style="height: 45px;">
+            <div class="flex justify-between">
+                <NH1>LAN-Share{{ electron ? '-Server' : '' }}</NH1>
+                <NButton
+                    v-if="electron"
+                    @click="() => { electron && electron.send('appRelaunch', undefined) }"
+                    class="mr-6"
+                    type="warning"
+                    ghost
+                >relaunch</NButton>
+            </div>
         </NLayoutHeader>
 
-        <div class="flex items-center flex-wrap" v-if="electron">
+        <div class="flex items-center h-27" v-if="electron">
             <div class="flex max-w-1/1">
                 <NInputGroup class="px-3">
                     <NInputGroupLabel style="min-width: 36px;">IP</NInputGroupLabel>
                     <NInput style="width: 240px;" v-model:value="ip"></NInput>
-                    <NInputGroupLabel style="min-width: 52px;">端口</NInputGroupLabel>
+                    <NInputGroupLabel style="min-width: 52px;">Port</NInputGroupLabel>
                     <NInputNumber style="width: 240px;" :show-button="false" v-model:value="port"></NInputNumber>
                 </NInputGroup>
-                <NButton circle @click="() => { stop().then(() => serve()) }">
+                <!-- <NButton circle @click="restart">
                     <template #icon>
                         <NIcon size="18">
                             <i-el-refresh></i-el-refresh>
                         </NIcon>
                     </template>
-                </NButton>
+                </NButton>-->
             </div>
-            <NAlert class="m-4" :type="isServing ? 'success' : 'info'">
+            <NAlert class="mx-4" :type="isServing ? 'success' : 'info'">
                 <span v-for="address in trueAddress">
-                    {{ `${address.type === 'local' ? '本地' : '网络'}: ${address.address.replace('127.0.0.1', 'localhost')}:${address.port}` }}
+                    {{ `${address.type === 'local' ? 'Local:&ensp;&ensp;&ensp;&ensp;' : 'Network:&ensp;'}${address.address.replace('127.0.0.1', 'localhost')}:${address.port}` }}
                     <br />
                 </span>
-                {{ isServing ? '' : '服务未开启' }}
+                {{ isServing ? '' : 'Server has not started yet' }}
             </NAlert>
-            <NButton v-if="isServing" @click="stop">关闭服务</NButton>
+            <!-- <NButton type="warning" ghost class="m-2" v-if="isServing" @click="stop">stop server</NButton> -->
         </div>
 
-        <div v-if="!isServing" class="h-3/4 flex justify-center items-center">
-            <NButton ghost type="primary" @click="openDir" size="large">选择或拖拽文件夹</NButton>
+        <div v-if="!isServing && electron" class="h-3/4 flex justify-center items-center">
+            <NButton ghost type="primary" @click="openDir" size="large">Select or drop directory</NButton>
         </div>
         <div v-else>
-            <NButtonGroup class="ml-4">
-                <NButton @click="back">
-                    <template #icon>
-                        <NIcon>
-                            <i-akar-icons-arrow-back-thick-fill></i-akar-icons-arrow-back-thick-fill>
-                        </NIcon>
-                    </template>
-                </NButton>
-                <NButton @click="forward">
-                    <template #icon>
-                        <NIcon>
-                            <i-akar-icons-arrow-forward-thick-fill></i-akar-icons-arrow-forward-thick-fill>
-                        </NIcon>
-                    </template>
-                </NButton>
-            </NButtonGroup>
+            <div class="flex justify-between">
+                <NButtonGroup>
+                    <NButton @click="back">
+                        <template #icon>
+                            <NIcon>
+                                <i-akar-icons-arrow-back-thick-fill></i-akar-icons-arrow-back-thick-fill>
+                            </NIcon>
+                        </template>
+                    </NButton>
+                    <NButton @click="forward">
+                        <template #icon>
+                            <NIcon>
+                                <i-akar-icons-arrow-forward-thick-fill></i-akar-icons-arrow-forward-thick-fill>
+                            </NIcon>
+                        </template>
+                    </NButton>
+                </NButtonGroup>
+                <NButtonGroup>
+                    <NUpload
+                        :show-file-list="false"
+                        :action="(electron ? `http://${ip}:${port}` : '') + '/upload'"
+                        multiple
+                        :data="{ dir: currentDir }"
+                    >
+                        <NButton>upload</NButton>
+                    </NUpload>
+                    <NButton @click="newFile">
+                        <template #icon>
+                            <NIcon>
+                                <i-ant-design-file-add-filled></i-ant-design-file-add-filled>
+                            </NIcon>
+                        </template>
+                    </NButton>
+                    <NButton @click="newDir">
+                        <template #icon>
+                            <NIcon>
+                                <AlarityDirectorySolid></AlarityDirectorySolid>
+                            </NIcon>
+                        </template>
+                    </NButton>
+                </NButtonGroup>
+            </div>
 
-            <NLayoutContent
-                v-show="!displayFile"
-                class="mt-4"
-                style="height: 80vh;"
-                :native-scrollbar="false"
+            <div
+                class="absolute bottom-4 left-0 right-0"
+                :style="{ top: electron ? '224px' : '116px' }"
             >
-                <NCard>
+                <NLayoutContent class="h-full" v-show="!displayFile" :native-scrollbar="false">
                     <NMenu @update-value="onClickMenu" :options="menu"></NMenu>
-                </NCard>
-            </NLayoutContent>
-            <div v-show="displayFile" style="height: 80vh;" class="w-full p-4">
-                <img :src="displayImg" class="m-auto" />
-                <NText>{{ displayText }}</NText>
+                </NLayoutContent>
+                <div v-show="displayFile" class="w-full p-4 pt-0">
+                    <img v-show="displayImg" class="max-h-full max-w-full m-auto" :src="displayImg" />
+                    <div class="flex justify-end pb-1" v-show="!displayImg" @click="onClickEdit">
+                        <NButton>{{ editMode ? 'save' : 'edit' }}</NButton>
+                    </div>
+                    <div v-if="displayText">
+                        <NInput
+                            autosize
+                            :placeholder="''"
+                            disabled
+                            type="textarea"
+                            v-if="!editMode"
+                            :value="displayText"
+                        ></NInput>
+                        <NInput autosize type="textarea" v-else v-model:value="editText"></NInput>
+                    </div>
+                </div>
             </div>
         </div>
     </NLayout>

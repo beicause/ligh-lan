@@ -10,11 +10,16 @@ const baseOptions = () => {
   const options = {
     plugins: [
       commonjs(),
-      typescript(),
+      typescript({ check: false }),
       json(),
       nodeResolve({ preferBuiltins: true })
     ],
-    external: 'electron',
+    external: [
+      'electron',
+      // TODO
+      // formidable causes this error when preloading, I have no idea but to make it external
+      'formidable'
+    ],
     treeshake: {
       moduleSideEffects: 'no-external',
       propertyReadSideEffects: false,
