@@ -439,7 +439,7 @@ const menu = computed(() =>
                     <NMenu @update-value="onClickMenu" :options="menu"></NMenu>
                 </NLayoutContent>
                 <div v-show="displayFile" class="w-full h-full p-4 pt-0">
-                    <img v-show="displayImg" class="max-h-full max-w-full m-auto" :src="displayImg" />
+                    <img v-show="displayImg" class="max-h-full max-w-full m-auto absolute left-0 right-0 top-0 bottom-0" :src="displayImg" />
                     <div class="flex justify-end pb-1" v-show="!displayImg" @click="onClickEdit">
                         <NButton>{{ editMode ? 'save' : 'edit' }}</NButton>
                     </div>
