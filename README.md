@@ -2,6 +2,8 @@
 
 a desktop application based on electron for sharing and editing files in LAN
 
+![app](https://raw.githubusercontent.com/beicause/ligh-lan/master/images/app.png)
+
 ## Features
 
 * serve a directory, then by entering the server's url, any devices in the same local area network can see it.
