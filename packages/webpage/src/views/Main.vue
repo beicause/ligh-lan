@@ -10,9 +10,10 @@ import CarbonDelete from '~icons/carbon/delete'
 import { computed, ref, h, VNode, watch } from 'vue'
 import { electron } from '../common/electron'
 import axios from 'axios'
-import { NButton, NEllipsis, useDialog, useMessage } from 'naive-ui'
+import { NButton, NEllipsis, UploadFileInfo, useDialog, useMessage } from 'naive-ui'
 import pkg from '../../package.json'
 import { theme } from '../common/state'
+import { sm } from '../common/state'
 
 type FileNode = { type: 'file', path: string } | { type: 'dir', path: string, children: FileNode[] }
 const message = useMessage()
@@ -36,6 +37,7 @@ const inputType = ref('file' as 'file' | 'dir')
 const editMode = ref(false)
 const editText = ref('')
 let ws = null as WebSocket | null
+const uploadFileList = ref([] as UploadFileInfo[])
 const dirChildren = computed(() => {
     if (!(fileInfo.value?.type === 'dir')) return []
     let children = [] as FileNode[]
@@ -244,6 +246,12 @@ function openGitHub() {
     else electron.send('openBrowser', url)
 }
 
+function onUploadList(e: UploadFileInfo[]) {
+    uploadFileList.value = e.map(f => {
+        f.name = f.name.substring(0, 10) + '...'
+        return f
+    })
+}
 const imgExt = ['apng', 'avif', 'gif', 'jpeg', 'jpg', 'png', 'svg', 'webp'].map(f => '.' + f)
 
 window.onpopstate = () => {
@@ -301,11 +309,15 @@ const menu = computed(() =>
                         renderFileName(file.path),
                         h('div', [
                             file.type === 'file' ? h(NButton,
-                                { tag: 'a', href: getFileHref(file.path), download: getFileHref(file.path), onClick: e => e.stopPropagation() },
+                                {
+                                    size: sm.value ? 'medium' : 'tiny',
+                                    tag: 'a', href: getFileHref(file.path), download: getFileHref(file.path), onClick: e => e.stopPropagation()
+                                },
                                 { default: () => h(CarbonDownload) }
                             ) : null,
                             h(NButton,
                                 {
+                                    size: sm.value ? 'medium' : 'tiny',
                                     onClick: e => {
                                         e.stopPropagation()
                                         dialog.warning({
@@ -350,19 +362,18 @@ const menu = computed(() =>
     </NModal>
     <NLayout class="h-screen box-border" position="absolute">
         <NLayoutHeader class="mx-2 mt-2 mb-4 overflow-hidden" style="height: 45px;">
-            <div class="flex justify-between">
-                <NH1>LAN-Share{{ electron ? '-Server' : '' }}</NH1>
-                <div>
+            <div class="flex justify-between items-center">
+                <NH1 class="mb-0">LAN-Share{{ electron ? '-Server' : '' }}</NH1>
+                <NButtonGroup :size="sm ? 'medium' : 'small'" class="mr-4">
                     <NButton @click="() => theme = theme === 'light' ? 'dark' : 'light'">{{ theme }}</NButton>
                     <NButton @click="openGitHub">GitHub</NButton>
                     <NButton
                         v-if="electron"
                         @click="() => { electron && electron.send('appRelaunch', undefined) }"
-                        class="mr-6"
                         type="warning"
                         ghost
                     >relaunch</NButton>
-                </div>
+                </NButtonGroup>
             </div>
         </NLayoutHeader>
 
@@ -397,7 +408,7 @@ const menu = computed(() =>
         </div>
         <div v-else>
             <div class="flex justify-between">
-                <NButtonGroup>
+                <NButtonGroup :size="sm ? 'medium' : 'tiny'">
                     <NButton @click="back">
                         <template #icon>
                             <NIcon>
@@ -413,14 +424,20 @@ const menu = computed(() =>
                         </template>
                     </NButton>
                 </NButtonGroup>
-                <NButtonGroup>
+                <NButtonGroup :size="sm ? 'medium' : 'tiny'">
                     <NUpload
-                        :show-file-list="false"
+                        :file-list="uploadFileList"
+                        @update-file-list="onUploadList"
+                        abstract
                         :action="(electron ? `http://${ip}:${port}` : '') + '/upload'"
+                        class="flex"
                         multiple
                         :data="{ dir: currentDir }"
                     >
-                        <NButton>upload</NButton>
+                        <NUploadFileList class="z-1"></NUploadFileList>
+                        <NUploadTrigger>
+                            <NButton>upload</NButton>
+                        </NUploadTrigger>
                     </NUpload>
                     <NButton @click="newFile">
                         <template #icon>
@@ -441,7 +458,7 @@ const menu = computed(() =>
 
             <div
                 class="absolute bottom-4 left-0 right-0"
-                :style="{ top: electron ? '224px' : '116px' }"
+                :style="{ top: electron ? '224px' : sm ? '116px' : '98px' }"
             >
                 <NLayoutContent class="h-full" v-show="!displayFile" :native-scrollbar="false">
                     <NMenu @update-value="onClickMenu" :options="menu"></NMenu>
