@@ -40,7 +40,10 @@ app.on('window-all-closed', () => {
 })
 
 app.applicationMenu = null
-nativeTheme.themeSource = 'dark'
+
+ipcMain.on('theme', (e, args) => {
+  nativeTheme.themeSource = args || 'light'
+})
 
 ipcMain.on('openDialog', (event, options: Electron.OpenDialogOptions) => {
   dialog

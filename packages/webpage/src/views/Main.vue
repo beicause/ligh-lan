@@ -8,10 +8,11 @@ import CarbonDownload from '~icons/carbon/download'
 // @ts-ignore
 import CarbonDelete from '~icons/carbon/delete'
 import { computed, ref, h, VNode, watch } from 'vue'
-import { electron } from '../../common/electron'
+import { electron } from '../common/electron'
 import axios from 'axios'
 import { NButton, NEllipsis, useDialog, useMessage } from 'naive-ui'
 import pkg from '../../package.json'
+import { theme } from '../common/state'
 
 type FileNode = { type: 'file', path: string } | { type: 'dir', path: string, children: FileNode[] }
 const message = useMessage()
@@ -103,7 +104,7 @@ function setFileInfo() {
 
 function openDir() {
     electron?.openDialog({ title: 'select directory', properties: ['openDirectory'] })
-        .then(res => {
+        .then((res: string[]) => {
             if (res.length === 0) return
             serverRoot.value = res[0]
             serve()
@@ -346,7 +347,8 @@ const menu = computed(() =>
             <div class="flex justify-between">
                 <NH1>LAN-Share{{ electron ? '-Server' : '' }}</NH1>
                 <div>
-                    <NButton class="mr-4" @click="openGitHub">GitHub</NButton>
+                    <NButton @click="() => theme = theme === 'light' ? 'dark' : 'light'">{{ theme }}</NButton>
+                    <NButton @click="openGitHub">GitHub</NButton>
                     <NButton
                         v-if="electron"
                         @click="() => { electron && electron.send('appRelaunch', undefined) }"
@@ -439,7 +441,11 @@ const menu = computed(() =>
                     <NMenu @update-value="onClickMenu" :options="menu"></NMenu>
                 </NLayoutContent>
                 <div v-show="displayFile" class="w-full h-full p-4 pt-0">
-                    <img v-show="displayImg" class="max-h-full max-w-full m-auto absolute left-0 right-0 top-0 bottom-0" :src="displayImg" />
+                    <img
+                        v-show="displayImg"
+                        class="max-h-full max-w-full m-auto absolute left-0 right-0 top-0 bottom-0"
+                        :src="displayImg"
+                    />
                     <div class="flex justify-end pb-1" v-show="!displayImg" @click="onClickEdit">
                         <NButton>{{ editMode ? 'save' : 'edit' }}</NButton>
                     </div>
