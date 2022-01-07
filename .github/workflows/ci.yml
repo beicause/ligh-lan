@@ -43,4 +43,4 @@ jobs:
       - name: Build
         run: cd packages/electron && pnpm build && pnpm build-page && pnpm out
         env:
-          GH_TOKEN: ${{GITHUB_TOKEN}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
