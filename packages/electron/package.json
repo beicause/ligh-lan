@@ -8,8 +8,8 @@
     "build-page": "cd ../webpage && pnpm build && cd ../electron && pnpm copy-page",
     "copy-page": "rimraf ./dist/page && node ../../scripts/copy_page.js",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "electron ./dist/main.js",
-    "dev-server": "export ELECTRON_PAGE_DEBUG=1 && pnpm start",
+    "start": "cross-env ELECTRON_DEV_TOOLS=1 electron ./dist/main.js",
+    "dev-server": "cross-env ELECTRON_SERVER_DEBUG=1 pnpm start",
     "pack": "electron-builder --dir",
     "out": "electron-builder"
   },
@@ -24,6 +24,7 @@
     "@types/formidable": "^2.0.3",
     "@types/ws": "^8.2.2",
     "connect": "^3.7.0",
+    "cross-env": "^7.0.3",
     "electron": "^16.0.2",
     "electron-builder": "^22.14.5",
     "rimraf": "^3.0.2",

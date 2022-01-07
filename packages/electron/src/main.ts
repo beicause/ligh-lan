@@ -1,6 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, nativeTheme } from 'electron'
 import * as path from 'path'
-import fs from 'fs'
 
 const page = path.join(__dirname, './page')
 let mainWindow = null as null | BrowserWindow
@@ -13,10 +12,11 @@ function createWindow() {
       webSecurity: !process.env.ELECTRON_PAGE_DEBUG
     }
   })
-  if (process.env.ELECTRON_PAGE_DEBUG)
+  if (process.env.ELECTRON_SERVER_DEBUG)
     mainWindow.loadURL('http://localhost:3000/')
   else mainWindow.loadFile(path.join(page, 'index.html'))
-  mainWindow.webContents.openDevTools()
+  if (process.env.ELECTRON_DEV_TOOLS) mainWindow.webContents.openDevTools()
+  console.log(process.env.ELECTRON_DEV_TOOLS)
 }
 
 app.on('ready', () => {

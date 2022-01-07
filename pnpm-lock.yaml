@@ -8,6 +8,7 @@ importers:
       '@types/node': ^17.0.8
       '@typescript-eslint/eslint-plugin': ^5.8.1
       '@typescript-eslint/parser': ^5.9.0
+      cross-env: ^7.0.3
       electron: ^16.0.6
       eslint: ^7.32.0
       eslint-define-config: ^1.2.1
@@ -33,6 +34,7 @@ importers:
       '@types/node': 17.0.8
       '@typescript-eslint/eslint-plugin': 5.8.1_c05e6fca5974c04442e7c260534af929
       '@typescript-eslint/parser': 5.9.0_eslint@7.32.0+typescript@4.5.4
+      cross-env: 7.0.3
       eslint: 7.32.0
       eslint-define-config: 1.2.1
       eslint-plugin-jest: 25.3.4_4a1d90fed3110c69e5d1752fbfe901b6
@@ -55,6 +57,7 @@ importers:
       '@types/formidable': ^2.0.3
       '@types/ws': ^8.2.2
       connect: ^3.7.0
+      cross-env: ^7.0.3
       electron: ^16.0.2
       electron-builder: ^22.14.5
       formidable: ^2.0.1
@@ -77,6 +80,7 @@ importers:
       '@types/formidable': 2.0.3
       '@types/ws': 8.2.2
       connect: 3.7.0
+      cross-env: 7.0.3
       electron: 16.0.5
       electron-builder: 22.14.5
       rimraf: 3.0.2
@@ -2343,6 +2347,14 @@ packages:
 
   /create-require/1.1.1:
     resolution: {integrity: sha1-wdfo8eX2z8n/ZfnNNS03NIdWwzM=, tarball: create-require/download/create-require-1.1.1.tgz}
+    dev: true
+
+  /cross-env/7.0.3:
+    resolution: {integrity: sha1-hlJkspZ33AFbqEGJGJZd0jL8VM8=, tarball: cross-env/download/cross-env-7.0.3.tgz}
+    engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
+    hasBin: true
+    dependencies:
+      cross-spawn: 7.0.3
     dev: true
 
   /cross-spawn/7.0.3:
