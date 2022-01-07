@@ -163,14 +163,15 @@ const _electron = {
       ipcRenderer.on('openDialogReply', (_, args) => resolve(args))
     )
   },
-  send(channel: string, args: any) {
+  send(channel: string, args?: any) {
     ipcRenderer.send(channel, args)
   },
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  on(channel: string, callback: (args: any) => void) {
+  on(channel: string, callback: (args?: any) => void) {
     ipcRenderer.on(channel, (event, args) => callback(args))
   }
 }
+
 ipcRenderer.on('fileInfoReply', (e, args) => {
   fileInfo = args
   console.log('update file info')

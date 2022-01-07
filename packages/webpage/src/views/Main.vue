@@ -1,10 +1,12 @@
 <script setup lang="ts">
-// @ts-nocheck
+// @ts-ignore
 import AkarIconsFile from '~icons/akar-icons/file'
+// @ts-ignore
 import AlarityDirectorySolid from '~icons/clarity/directory-solid'
+// @ts-ignore
 import CarbonDownload from '~icons/carbon/download'
+// @ts-ignore
 import CarbonDelete from '~icons/carbon/delete'
-// @ts-check
 import { computed, ref, h, VNode, watch } from 'vue'
 import { electron } from '../../common/electron'
 import axios from 'axios'
@@ -23,12 +25,10 @@ const isServing = computed(() => {
 const serverRoot = ref('')
 const currentDir = ref('')
 const ip = ref('0.0.0.0')
-const port = ref(9980)
+const port = ref(9850)
 const displayFile = ref(undefined as { path: string, href: string, ext: string } | undefined)
 const displayImg = ref('')
 const displayText = ref('')
-const historyPath = ref([] as FileNode[])
-const historyPoint = ref(0)
 const showModel = ref(false)
 const inputFileName = ref('')
 const inputType = ref('file' as 'file' | 'dir')
@@ -59,7 +59,7 @@ const dirChildren = computed(() => {
     return children
 })
 function receiveWs() {
-    ws.onmessage = res => {
+    ws!.onmessage = res => {
         const data = JSON.parse(res.data)
         switch (data.mode) {
             case 'fileInfo':
@@ -67,21 +67,21 @@ function receiveWs() {
                 if (fileInfo.value) {
                     currentDir.value = fileInfo.value.path
                     serverRoot.value = currentDir.value
-                    if (historyPath.value.length === 0) historyPath.value.push(fileInfo.value)
                 }
                 break
             case 'ioe':
                 message.error(data.message)
                 break
             case 'fileWritten':
-                changeDisplayText(displayFile.value)
+                changeDisplayText(displayFile.value!)
                 break
         }
     }
 }
 function connectWs() {
-    ws = new WebSocket(electron ? `ws://${ip.value}:${port.value}` : `ws://${window.location.host}`)
-    ws.onopen = e => console.log('client connected')
+    try { ws = new WebSocket(electron ? `ws://${ip.value}:${port.value}` : `ws://${window.location.host}`) }
+    catch (e) { message.error('error:' + (e as any).message) }
+    ws!.onopen = e => console.log('client connected')
 }
 function getRootDirInfo(root: string): FileNode {
     const dirs: string[] = electron?.readDir(root)
@@ -114,13 +114,12 @@ async function serve() {
     currentDir.value = serverRoot.value
     fileInfo.value = getRootDirInfo(serverRoot.value)
     setFileInfo()
-    historyPath.value.push(fileInfo.value)
     const _address = await electron?.serveDir(currentDir.value, port.value, ip.value).catch(err => {
         console.log(err)
         message.error('fail to launch')
     })
     if (ip.value === '127.0.0.1') trueAddress.value = [{ type: 'local', address: '127.0.0.1', port: port.value }]
-    else trueAddress.value = _address
+    else trueAddress.value = _address!
     connectWs()
     receiveWs()
 }
@@ -148,35 +147,21 @@ function onClickMenu(_key: string) {
     const key = JSON.parse(_key) as FileNode
     if (key.type === 'file') displayFile.value = getFileInfo(key.path)
     else currentDir.value = key.path
-    const point = historyPoint.value + historyPath.value.length - 1
-    if (point >= 0) historyPath.value = historyPath.value.slice(0, point + 1)
-    historyPath.value.push(key)
-    historyPoint.value = 0
+    window.history.pushState(key, '')
 }
 
 const freshPath = () => {
-    const point = historyPath.value[historyPoint.value + historyPath.value.length - 1]
+    const top = window.history.state as FileNode | null
     displayFile.value = undefined
-    if (point.type === 'dir') currentDir.value = point.path
-    else displayFile.value = getFileInfo(point.path)
+    if (top === null) currentDir.value = serverRoot.value
+    else if (top.type === 'dir') currentDir.value = top.path
+    else displayFile.value = getFileInfo(top.path)
 }
 function back() {
-    historyPoint.value--
-    const point = historyPath.value[historyPoint.value + historyPath.value.length - 1]
-    if (!point) {
-        historyPoint.value++
-        return
-    }
-    freshPath()
+    window.history.back()
 }
 function forward() {
-    historyPoint.value++
-    const point = historyPath.value[historyPoint.value + historyPath.value.length - 1]
-    if (!point) {
-        historyPoint.value--
-        return
-    }
-    freshPath()
+    window.history.forward()
 }
 
 function getFileInfo(path: string) {
@@ -233,13 +218,13 @@ function onClickEdit() {
             path: displayFile.value?.path,
             data: editText.value
         }))
-        changeDisplayText(displayFile.value)
+        changeDisplayText(displayFile.value!)
     }
 }
-function changeDisplayImg(file: typeof displayFile.value) {
+function changeDisplayImg(file: NonNullable<typeof displayFile.value>) {
     displayImg.value = (electron ? `http://${ip.value}:${port.value}` : '') + file.href
 }
-function changeDisplayText(file: typeof displayFile.value) {
+function changeDisplayText(file: NonNullable<typeof displayFile.value>) {
     axios.get((electron ? `http://${ip.value}:${port.value}` : '') + file.href,
         { responseType: 'text', transformResponse: data => data }).then(res => {
             displayText.value = res.data
@@ -254,6 +239,9 @@ function openGitHub() {
 
 const imgExt = ['apng', 'avif', 'gif', 'jpeg', 'jpg', 'png', 'svg', 'webp'].map(f => '.' + f)
 
+window.onpopstate = () => {
+    freshPath()
+}
 window.ondragover = e => {
     e.preventDefault()
 }
@@ -261,7 +249,7 @@ window.ondrop = (e) => {
     e.preventDefault()
     if (!isServing.value && e.dataTransfer?.files[0]) {
         serverRoot.value = e.dataTransfer.files[0].path
-        restart()
+        serve()
     }
 }
 
@@ -450,7 +438,7 @@ const menu = computed(() =>
                 <NLayoutContent class="h-full" v-show="!displayFile" :native-scrollbar="false">
                     <NMenu @update-value="onClickMenu" :options="menu"></NMenu>
                 </NLayoutContent>
-                <div v-show="displayFile" class="w-full p-4 pt-0">
+                <div v-show="displayFile" class="w-full h-full p-4 pt-0">
                     <img v-show="displayImg" class="max-h-full max-w-full m-auto" :src="displayImg" />
                     <div class="flex justify-end pb-1" v-show="!displayImg" @click="onClickEdit">
                         <NButton>{{ editMode ? 'save' : 'edit' }}</NButton>

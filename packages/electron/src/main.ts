@@ -19,10 +19,10 @@ function createWindow() {
       webSecurity: !process.env.ELECTRON_PAGE_DEBUG
     }
   })
-  if (process.env.ELECTRON_SERVER_DEBUG)
+  if (process.env.LIGH_LAN_SERVER_DEBUG)
     mainWindow.loadURL('http://localhost:3000/')
   else mainWindow.loadFile(path.join(page, 'index.html'))
-  if (process.env.ELECTRON_DEV_TOOLS) mainWindow.webContents.openDevTools()
+  if (process.env.LIGH_LAN_DEV_TOOLS) mainWindow.webContents.openDevTools()
 }
 
 app.on('ready', () => {

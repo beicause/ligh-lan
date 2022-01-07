@@ -1,10 +1,14 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 // for type hints
-
 const _electron = {
   mkDir(path: string) {
-    fs.mkdirSync(path)
+    try {
+      fs.mkdirSync(path)
+    } catch (e: any) {
+      console.log(e)
+      sendError(e)
+    }
   },
   readDir(path: string) {
     return fs.readdirSync(path)
@@ -13,7 +17,12 @@ const _electron = {
     return fs.readFileSync(path).toString()
   },
   writeFile(path: string, data: string) {
-    fs.writeFileSync(path, data)
+    try {
+      fs.writeFileSync(path, data)
+    } catch (e: any) {
+      console.log(e)
+      sendError(e)
+    }
   },
   remove(path: string) {
     if (!fs.existsSync(path)) return
@@ -29,8 +38,32 @@ const _electron = {
   ): Promise<{ type: 'local' | 'network'; address: string; port: number }[]> {
     return new Promise((resolve, reject) => {
       const middleware = connect()
-      middleware.use(sirv(path))
+      middleware.use(
+        sirv(path, {
+          dotfiles: true,
+          dev: true
+        })
+      )
       middleware.use(sirv(join(__dirname, './page')))
+      middleware.use('/upload', (req, res, next) => {
+        const form = formidable()
+        form.parse(req, (err, fields, files) => {
+          if (err || typeof fields.dir !== 'string') {
+            res.writeHead(400)
+            res.end()
+            next()
+            return
+          }
+          const dir = fields.dir
+          const { originalFilename, filepath } = files.file as formidable.File
+          fs.copyFileSync(filepath, dir + '/' + originalFilename)
+          _electron.remove(filepath)
+          ipcRenderer.send('resetFile')
+          res.writeHead(200)
+          res.end()
+          next()
+        })
+      })
       _server = http.createServer(middleware)
       const onError = (e: Error & { code?: string }) => {
         if (e.code === 'EADDRINUSE') {
@@ -65,46 +98,65 @@ const _electron = {
 
         _ws.on('connection', (socket, req) => {
           sendFileInfo(socket)
+          console.log('on connection')
+
           socket.on('message', buffer => {
+            console.log(buffer.toString())
             const { mode, path, data } = JSON.parse(buffer.toString())
+
             switch (mode) {
               case 'delete':
                 _electron.remove(path)
                 ipcRenderer.send('resetFile')
                 break
               case 'mkFile':
-                _electron.writeFile(path, data)
+                if (fs.existsSync(path))
+                  ipcRenderer.send(
+                    'ioe',
+                    `file already exists, mkFile '${path}'`
+                  )
+                else _electron.writeFile(path, '')
                 ipcRenderer.send('resetFile')
                 break
               case 'mkDir':
                 _electron.mkDir(path)
                 ipcRenderer.send('resetFile')
                 break
+              case 'writeFile':
+                _electron.writeFile(path, data)
+                _ws?.clients.forEach(s => {
+                  s.send(
+                    JSON.stringify({
+                      mode: 'fileWritten'
+                    })
+                  )
+                })
             }
           })
         })
       })
     })
   },
-  async serveStop() {
-    return new Promise(resolve => {
-      _ws?.clients.forEach(s => s.close())
-      _ws?.close(() => {
-        _server?.close(() => resolve(undefined))
-      })
-    })
-  },
+  // async serveStop() {
+  //   return new Promise(resolve => {
+  //     fileInfo = ''
+  //     _ws?.clients.forEach(s => s.close())
+  //     _ws?.close(() => {
+  //       _server?.close(() => resolve(undefined))
+  //     })
+  //   })
+  // },
   async openDialog(options: Electron.OpenDialogOptions): Promise<string[]> {
     ipcRenderer.send('openDialog', options)
     return new Promise(resolve =>
       ipcRenderer.on('openDialogReply', (_, args) => resolve(args))
     )
   },
-  send(channel: string, args: any) {
+  send(channel: string, args?: any) {
     ipcRenderer.send(channel, args)
   },
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  on(channel: string, callback: (args: any) => void) {
+  on(channel: string, callback: (args?: any) => void) {
     ipcRenderer.on(channel, (event, args) => callback(args))
   }
 }
