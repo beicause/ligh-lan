@@ -4,7 +4,16 @@
   "files": [
     "dist"
   ],
-  "author": "Luo Zhihao",
+  "author": {
+    "name": "Luo Zhihao",
+    "email": "1494181792@qq.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beicause/ligh-lan.git",
+    "directory": "packages/webpage"
+  },
+  "homepage": "https://github.com/beicause/ligh-lan/tree/master/#readme",
   "license": "Apache-2.0",
   "scripts": {
     "dev": "vite --open --host",

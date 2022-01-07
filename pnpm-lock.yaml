@@ -8,7 +8,6 @@ importers:
       '@types/node': ^17.0.8
       '@typescript-eslint/eslint-plugin': ^5.8.1
       '@typescript-eslint/parser': ^5.9.0
-      cross-env: ^7.0.3
       electron: ^16.0.6
       eslint: ^7.32.0
       eslint-define-config: ^1.2.1
@@ -34,7 +33,6 @@ importers:
       '@types/node': 17.0.8
       '@typescript-eslint/eslint-plugin': 5.8.1_c05e6fca5974c04442e7c260534af929
       '@typescript-eslint/parser': 5.9.0_eslint@7.32.0+typescript@4.5.4
-      cross-env: 7.0.3
       eslint: 7.32.0
       eslint-define-config: 1.2.1
       eslint-plugin-jest: 25.3.4_4a1d90fed3110c69e5d1752fbfe901b6

@@ -1,4 +1,11 @@
-import { app, BrowserWindow, dialog, ipcMain, nativeTheme } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  nativeTheme,
+  shell
+} from 'electron'
 import * as path from 'path'
 
 const page = path.join(__dirname, './page')
@@ -16,7 +23,6 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:3000/')
   else mainWindow.loadFile(path.join(page, 'index.html'))
   if (process.env.ELECTRON_DEV_TOOLS) mainWindow.webContents.openDevTools()
-  console.log(process.env.ELECTRON_DEV_TOOLS)
 }
 
 app.on('ready', () => {
@@ -59,4 +65,8 @@ ipcMain.on('resetFileComplete', e => {
 ipcMain.on('appRelaunch', () => {
   app.relaunch()
   app.quit()
+})
+
+ipcMain.on('openBrowser', (e, args) => {
+  shell.openExternal(args)
 })

@@ -1,7 +1,8 @@
 {
-  "name": "ligh-lan-electron",
-  "version": "0.0.0",
+  "name": "ligh-lan",
+  "version": "0.0.1",
   "main": "dist/main.js",
+  "description": "a desktop application based on electron for sharing and editing files in LAN",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -cw",
@@ -11,10 +12,14 @@
     "start": "cross-env ELECTRON_DEV_TOOLS=1 electron ./dist/main.js",
     "dev-server": "cross-env ELECTRON_SERVER_DEBUG=1 pnpm start",
     "pack": "electron-builder --dir",
-    "out": "electron-builder"
+    "out": "electron-builder",
+    "release": "electron-builder -p onTag"
   },
   "license": "Apache-2.0",
-  "author": "Luo Zhihao",
+  "author": {
+    "name": "Luo Zhihao",
+    "email": "1494181792@qq.com"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-json": "^4.1.0",
@@ -41,15 +46,30 @@
   "build": {
     "appId": "com.qingcheng.ligh_lan",
     "files": [
-      "dist/**/*",
+      "dist",
+      "node_modules/formidable",
       "package.json"
     ],
     "directories": {
       "output": "out",
       "buildResources": "res"
     },
+    "linux": {
+      "category": "Utility",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
     "mac": {
       "category": "Utility"
-    }
-  }
+    },
+    "publish": "github"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beicause/ligh-lan.git",
+    "directory": "packages/electron"
+  },
+  "homepage": "https://github.com/beicause/ligh-lan/tree/master/#readme"
 }

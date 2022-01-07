@@ -9,6 +9,7 @@ import { computed, ref, h, VNode, watch } from 'vue'
 import { electron } from '../../common/electron'
 import axios from 'axios'
 import { NButton, NEllipsis, useDialog, useMessage } from 'naive-ui'
+import pkg from '../../package.json'
 
 type FileNode = { type: 'file', path: string } | { type: 'dir', path: string, children: FileNode[] }
 const message = useMessage()
@@ -244,6 +245,13 @@ function changeDisplayText(file: typeof displayFile.value) {
             displayText.value = res.data
         })
 }
+
+function openGitHub() {
+    const url = pkg.homepage
+    if (!electron) window.open(url)
+    else electron.send('openBrowser', url)
+}
+
 const imgExt = ['apng', 'avif', 'gif', 'jpeg', 'jpg', 'png', 'svg', 'webp'].map(f => '.' + f)
 
 window.ondragover = e => {
@@ -349,13 +357,16 @@ const menu = computed(() =>
         <NLayoutHeader class="mx-2 mt-2 mb-4 overflow-hidden" style="height: 45px;">
             <div class="flex justify-between">
                 <NH1>LAN-Share{{ electron ? '-Server' : '' }}</NH1>
-                <NButton
-                    v-if="electron"
-                    @click="() => { electron && electron.send('appRelaunch', undefined) }"
-                    class="mr-6"
-                    type="warning"
-                    ghost
-                >relaunch</NButton>
+                <div>
+                    <NButton class="mr-4" @click="openGitHub">GitHub</NButton>
+                    <NButton
+                        v-if="electron"
+                        @click="() => { electron && electron.send('appRelaunch', undefined) }"
+                        class="mr-6"
+                        type="warning"
+                        ghost
+                    >relaunch</NButton>
+                </div>
             </div>
         </NLayoutHeader>
 
