@@ -449,7 +449,7 @@ const menu = computed(() =>
                     <div class="flex justify-end pb-1" v-show="!displayImg" @click="onClickEdit">
                         <NButton>{{ editMode ? 'save' : 'edit' }}</NButton>
                     </div>
-                    <div v-if="displayText">
+                    <div v-show="!displayImg">
                         <NInput
                             autosize
                             :placeholder="''"
