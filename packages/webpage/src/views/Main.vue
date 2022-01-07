@@ -80,9 +80,11 @@ function receiveWs() {
     }
 }
 function connectWs() {
-    try { ws = new WebSocket(electron ? `ws://${ip.value}:${port.value}` : `ws://${window.location.host}`) }
-    catch (e) { message.error('error:' + (e as any).message) }
-    ws!.onopen = e => console.log('client connected')
+    ws = new WebSocket(electron ? `ws://${ip.value}:${port.value}` : `ws://${window.location.host}`)
+    ws.onerror = (e) => {
+        message.error('network error:' + (e as any).message, { closable: true, duration: 300000 })
+    }
+    ws.onopen = () => console.log('client connected')
 }
 function getRootDirInfo(root: string): FileNode {
     const dirs: string[] = electron?.readDir(root)
@@ -119,8 +121,12 @@ async function serve() {
         console.log(err)
         message.error('fail to launch')
     })
+    if (!_address) {
+        message.error('fail to launch')
+        return
+    }
     if (ip.value === '127.0.0.1') trueAddress.value = [{ type: 'local', address: '127.0.0.1', port: port.value }]
-    else trueAddress.value = _address!
+    else trueAddress.value = _address
     connectWs()
     receiveWs()
 }
