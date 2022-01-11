@@ -1,6 +1,7 @@
 {
   "name": "ligh-lan",
   "version": "0.0.3",
+  "private": true,
   "main": "dist/main.js",
   "description": "a desktop application based on electron for sharing and editing files in LAN",
   "scripts": {

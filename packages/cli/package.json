@@ -1,7 +1,7 @@
 {
   "name": "ligh-lan-cli",
   "version": "0.0.1",
-  "description": "a cli for sharing and editing files in LAN",
+  "description": "a server for sharing and editing files in LAN",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {

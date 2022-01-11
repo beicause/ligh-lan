@@ -18,7 +18,7 @@ jobs:
           - os: windows-latest
             node_version: 16
       fail-fast: false
-    name: Build&Test,${{ matrix.os }}
+    name: Release,${{ matrix.os }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
@@ -41,7 +41,8 @@ jobs:
       - name: Run lint
         run: pnpm lint && cd packages/webpage && pnpm check
 
-      - name: Build ts, page, and release
-        run: cd packages/electron && pnpm build && pnpm build-page && pnpm release
+      - name: Build ts, page, and release app
+        run: cd packages/electron && pnpm build-cli && pnpm release
         env:
           GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+

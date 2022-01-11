@@ -9,6 +9,10 @@ a desktop application based on electron for sharing and editing files in LAN
 * serve a directory, then by entering the server's url, any devices in the same local area network can see it.
 * create, edit, upload and delete files in the shared directory.
 
+## Cli
+
+see [packages/cli](https://github.com/beicause/ligh-lan/tree/master/packages/cli)
+
 ## Build
 
 1. Clone this project
