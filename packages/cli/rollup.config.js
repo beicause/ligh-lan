@@ -2,6 +2,7 @@ import typescript from 'rollup-plugin-typescript2'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
+import pkg from './package.json'
 
 const baseOptions = () => {
   /**
@@ -14,7 +15,11 @@ const baseOptions = () => {
       json(),
       nodeResolve({ preferBuiltins: true })
     ],
-    external: ['electron', 'ligh-lan-cli'],
+    external: [
+      // TODO
+      // formidable causes error, I have no idea but to make it external
+      'formidable'
+    ],
     treeshake: {
       moduleSideEffects: 'no-external',
       propertyReadSideEffects: false,
@@ -26,18 +31,16 @@ const baseOptions = () => {
 /**
  * @type { import('rollup').RollupOptions }
  */
-const main = {
+const index = {
   ...baseOptions(),
-  input: 'src/main.ts',
-  output: { format: 'cjs', file: 'dist/main.js' }
+  input: 'src/index.ts',
+  output: { format: 'cjs', file: pkg.main }
 }
 
-/**
- * @type { import('rollup').RollupOptions }
- */
-const preload = {
+const cli = {
   ...baseOptions(),
-  input: 'src/preload.ts',
-  output: { format: 'cjs', file: 'dist/preload.js' }
+  input: 'src/cli.ts',
+  output: { format: 'cjs', file: pkg.bin.lan }
 }
-export default [main, preload]
+
+export default [index, cli]

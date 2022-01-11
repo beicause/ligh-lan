@@ -1,0 +1,44 @@
+{
+  "name": "ligh-lan-cli",
+  "version": "0.0.1",
+  "description": "a cli for sharing and editing files in LAN",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "lan": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "watch": "rollup -wc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beicause/light-lan.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "lan"
+  ],
+  "author": "Luo Zhihao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/beicause/light-lan/issues"
+  },
+  "homepage": "https://github.com/beicause/light-lan#readme",
+  "devDependencies": {
+    "@types/connect": "^3.4.35",
+    "@types/ws": "^8.2.2",
+    "cac": "^6.7.12",
+    "chokidar": "^3.5.2",
+    "connect": "^3.7.0",
+    "sirv": "^2.0.0",
+    "ws": "^8.4.0"
+  },
+  "dependencies": {
+    "formidable": "^2.0.1",
+    "ligh-lan-webpage": "workspace:*"
+  }
+}

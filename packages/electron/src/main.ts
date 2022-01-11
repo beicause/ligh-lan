@@ -7,8 +7,8 @@ import {
   shell
 } from 'electron'
 import * as path from 'path'
+import { pagePath } from 'ligh-lan-cli'
 
-const page = path.join(__dirname, './page')
 let mainWindow = null as null | BrowserWindow
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -21,7 +21,7 @@ function createWindow() {
   })
   if (process.env.LIGH_LAN_SERVER_DEBUG)
     mainWindow.loadURL('http://localhost:3000/')
-  else mainWindow.loadFile(path.join(page, 'index.html'))
+  else mainWindow.loadFile(path.join(pagePath))
   if (process.env.LIGH_LAN_DEV_TOOLS) mainWindow.webContents.openDevTools()
 }
 
@@ -52,17 +52,6 @@ ipcMain.on('openDialog', (event, options: Electron.OpenDialogOptions) => {
       event.reply('openDialogReply', res.filePaths)
     })
     .catch(err => console.log(err))
-})
-
-ipcMain.on('resetFile', e => {
-  e.reply('resetFileReply')
-})
-
-ipcMain.on('fileInfo', (e, args) => {
-  e.reply('fileInfoReply', args)
-})
-ipcMain.on('resetFileComplete', e => {
-  e.reply('resetFileCompleteReply')
 })
 
 ipcMain.on('appRelaunch', () => {

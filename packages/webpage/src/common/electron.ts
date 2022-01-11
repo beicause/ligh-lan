@@ -154,10 +154,6 @@ const _electron = {
   },
   send(channel: string, args?: any) {
     ipcRenderer.send(channel, args)
-  },
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  on(channel: string, callback: (args?: any) => void) {
-    ipcRenderer.on(channel, (event, args) => callback(args))
   }
 }
 // @ts-check

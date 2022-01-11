@@ -4,6 +4,7 @@
   "files": [
     "dist"
   ],
+  "main": "dist/index.html",
   "author": {
     "name": "Luo Zhihao",
     "email": "1494181792@qq.com"
@@ -23,7 +24,6 @@
   },
   "dependencies": {
     "axios": "^0.24.0",
-    "electron": "^16.0.5",
     "vue": "^3.2.25"
   },
   "devDependencies": {

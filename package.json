@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "eslint --ext .ts packages/*/src/**.ts",
     "format": "prettier --write --parser typescript \"packages/**/*.ts?(x)\"",
-    "build": "cd packages/electron && pnpm build && pnpm build-page && pnpm out",
+    "build": "cd packages/electron && pnpm build && pnpm build-cli && pnpm out",
     "prepare": "husky install"
   },
   "lint-staged": {
@@ -41,7 +41,15 @@
     "ts-jest": "^27.1.2",
     "ts-node": "^10.4.0",
     "tslib": "^2.3.1",
-    "typescript": "^4.5.4"
+    "typescript": "^4.5.4",
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.0.6",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.62.0",
+    "rollup-plugin-typescript2": "^0.31.1",
+    "ts-toolbelt": "^9.6.0",
+    "@types/bluebird": "^3.5.36"
   },
   "packageManager": "pnpm"
 }

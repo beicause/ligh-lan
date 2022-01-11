@@ -6,8 +6,7 @@
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -cw",
-    "build-page": "cd ../webpage && pnpm build && cd ../electron && pnpm copy-page",
-    "copy-page": "rimraf ./dist/page && node ../../scripts/copy_page.js",
+    "build-cli": "cd ../webpage && pnpm build && cd ../cli && pnpm build",
     "lint": "eslint -c .eslintrc --ext .ts ./src",
     "start": "cross-env LIGH_LAN_DEV_TOOLS=1 electron ./dist/main.js",
     "dev-server": "cross-env LIGH_LAN_SERVER_DEBUG=1 pnpm start",
@@ -21,33 +20,22 @@
     "email": "1494181792@qq.com"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^21.0.1",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^13.0.6",
-    "@types/bluebird": "^3.5.36",
     "@types/connect": "^3.4.35",
-    "@types/formidable": "^2.0.3",
     "@types/ws": "^8.2.2",
     "connect": "^3.7.0",
     "cross-env": "^7.0.3",
     "electron": "^16.0.2",
     "electron-builder": "^22.14.5",
-    "rimraf": "^3.0.2",
-    "rollup": "^2.62.0",
-    "rollup-plugin-typescript2": "^0.31.1",
     "sirv": "^2.0.0",
-    "ts-toolbelt": "^9.6.0",
     "ws": "^8.4.0"
   },
   "dependencies": {
-    "formidable": "^2.0.1",
-    "ligh-lan-webpage": "workspace:*"
+    "ligh-lan-cli": "workspace:*"
   },
   "build": {
     "appId": "com.qingcheng.ligh_lan",
     "files": [
       "dist",
-      "node_modules/formidable",
       "package.json"
     ],
     "directories": {

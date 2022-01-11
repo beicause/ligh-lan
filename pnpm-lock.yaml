@@ -5,6 +5,10 @@ importers:
   .:
     specifiers:
       '@babel/core': ^7.16.7
+      '@rollup/plugin-commonjs': ^21.0.1
+      '@rollup/plugin-json': ^4.1.0
+      '@rollup/plugin-node-resolve': ^13.0.6
+      '@types/bluebird': ^3.5.36
       '@types/node': ^17.0.8
       '@typescript-eslint/eslint-plugin': ^5.8.1
       '@typescript-eslint/parser': ^5.9.0
@@ -19,8 +23,12 @@ importers:
       jest: ^27.4.6
       lint-staged: ^12.1.5
       prettier: ^2.5.1
+      rimraf: ^3.0.2
+      rollup: ^2.62.0
+      rollup-plugin-typescript2: ^0.31.1
       ts-jest: ^27.1.2
       ts-node: ^10.4.0
+      ts-toolbelt: ^9.6.0
       tslib: ^2.3.1
       typescript: ^4.5.4
     dependencies:
@@ -30,6 +38,10 @@ importers:
       eslint-visitor-keys: 2.1.0
     devDependencies:
       '@babel/core': 7.16.7
+      '@rollup/plugin-commonjs': 21.0.1_rollup@2.62.0
+      '@rollup/plugin-json': 4.1.0_rollup@2.62.0
+      '@rollup/plugin-node-resolve': 13.1.2_rollup@2.62.0
+      '@types/bluebird': 3.5.36
       '@types/node': 17.0.8
       '@typescript-eslint/eslint-plugin': 5.8.1_c05e6fca5974c04442e7c260534af929
       '@typescript-eslint/parser': 5.9.0_eslint@7.32.0+typescript@4.5.4
@@ -40,52 +52,59 @@ importers:
       jest: 27.4.6_958d75eeddef6a0d5f2d913d66acd9a6
       lint-staged: 12.1.5
       prettier: 2.5.1
+      rimraf: 3.0.2
+      rollup: 2.62.0
+      rollup-plugin-typescript2: 0.31.1_8963b1a16e15679727182a9caf805f22
       ts-jest: 27.1.2_930ce21c7c984a48e175069b66fa2608
       ts-node: 10.4.0_faf01e1d5a40372a98081522dcafc186
+      ts-toolbelt: 9.6.0
       tslib: 2.3.1
       typescript: 4.5.4
 
-  packages/electron:
+  packages/cli:
     specifiers:
-      '@rollup/plugin-commonjs': ^21.0.1
-      '@rollup/plugin-json': ^4.1.0
-      '@rollup/plugin-node-resolve': ^13.0.6
-      '@types/bluebird': ^3.5.36
       '@types/connect': ^3.4.35
-      '@types/formidable': ^2.0.3
       '@types/ws': ^8.2.2
+      cac: ^6.7.12
+      chokidar: ^3.5.2
       connect: ^3.7.0
-      cross-env: ^7.0.3
-      electron: ^16.0.2
-      electron-builder: ^22.14.5
       formidable: ^2.0.1
       ligh-lan-webpage: workspace:*
-      rimraf: ^3.0.2
-      rollup: ^2.62.0
-      rollup-plugin-typescript2: ^0.31.1
       sirv: ^2.0.0
-      ts-toolbelt: ^9.6.0
       ws: ^8.4.0
     dependencies:
       formidable: 2.0.1
       ligh-lan-webpage: link:../webpage
     devDependencies:
-      '@rollup/plugin-commonjs': 21.0.1_rollup@2.62.0
-      '@rollup/plugin-json': 4.1.0_rollup@2.62.0
-      '@rollup/plugin-node-resolve': 13.1.2_rollup@2.62.0
-      '@types/bluebird': 3.5.36
       '@types/connect': 3.4.35
-      '@types/formidable': 2.0.3
+      '@types/ws': 8.2.2
+      cac: 6.7.12
+      chokidar: 3.5.2
+      connect: 3.7.0
+      sirv: 2.0.0
+      ws: 8.4.0
+
+  packages/electron:
+    specifiers:
+      '@types/connect': ^3.4.35
+      '@types/ws': ^8.2.2
+      connect: ^3.7.0
+      cross-env: ^7.0.3
+      electron: ^16.0.2
+      electron-builder: ^22.14.5
+      ligh-lan-cli: workspace:*
+      sirv: ^2.0.0
+      ws: ^8.4.0
+    dependencies:
+      ligh-lan-cli: link:../cli
+    devDependencies:
+      '@types/connect': 3.4.35
       '@types/ws': 8.2.2
       connect: 3.7.0
       cross-env: 7.0.3
       electron: 16.0.5
       electron-builder: 22.14.5
-      rimraf: 3.0.2
-      rollup: 2.62.0
-      rollup-plugin-typescript2: 0.31.1_8963b1a16e15679727182a9caf805f22
       sirv: 2.0.0
-      ts-toolbelt: 9.6.0
       ws: 8.4.0
 
   packages/webpage:
@@ -93,7 +112,6 @@ importers:
       '@iconify/json': ^1.1.451
       '@vitejs/plugin-vue': ^2.0.0
       axios: ^0.24.0
-      electron: ^16.0.5
       naive-ui: ^2.23.2
       typescript: ^4.4.4
       unplugin-icons: ^0.13.0
@@ -105,15 +123,14 @@ importers:
       windicss: ^3.4.1
     dependencies:
       axios: 0.24.0
-      electron: 16.0.5
       vue: 3.2.26
     devDependencies:
       '@iconify/json': 1.1.451
       '@vitejs/plugin-vue': 2.0.1_vite@2.7.9+vue@3.2.26
       naive-ui: 2.23.2_vue@3.2.26
       typescript: 4.5.4
-      unplugin-icons: 0.13.0_vite@2.7.9
-      unplugin-vue-components: 0.17.11_vite@2.7.9+vue@3.2.26
+      unplugin-icons: 0.13.0_rollup@2.62.0+vite@2.7.9
+      unplugin-vue-components: 0.17.11_75e9e1bb8b559d301075f79696a95504
       vite: 2.7.9
       vite-plugin-windicss: 1.6.1_vite@2.7.9
       vue-tsc: 0.29.8_typescript@4.5.4
@@ -887,7 +904,7 @@ packages:
       glob: 7.2.0
       is-reference: 1.2.1
       magic-string: 0.25.7
-      resolve: 1.20.0
+      resolve: 1.21.0
       rollup: 2.62.0
     dev: true
 
@@ -911,7 +928,7 @@ packages:
       builtin-modules: 3.2.0
       deepmerge: 4.2.2
       is-module: 1.0.0
-      resolve: 1.20.0
+      resolve: 1.21.0
       rollup: 2.62.0
     dev: true
 
@@ -923,7 +940,7 @@ packages:
     dependencies:
       '@types/estree': 0.0.39
       estree-walker: 1.0.1
-      picomatch: 2.3.0
+      picomatch: 2.3.1
       rollup: 2.62.0
     dev: true
 
@@ -932,7 +949,7 @@ packages:
     engines: {node: '>= 8.0.0'}
     dependencies:
       estree-walker: 2.0.2
-      picomatch: 2.3.0
+      picomatch: 2.3.1
     dev: true
 
   /@sindresorhus/is/0.14.0:
@@ -1025,7 +1042,7 @@ packages:
   /@types/connect/3.4.35:
     resolution: {integrity: sha1-X89q5EXkAh0fwiGaSHPMc6O7KtE=, tarball: '@types/connect/download/@types/connect-3.4.35.tgz'}
     dependencies:
-      '@types/node': 17.0.5
+      '@types/node': 17.0.8
     dev: true
 
   /@types/debug/4.1.7:
@@ -1040,12 +1057,6 @@ packages:
 
   /@types/estree/0.0.50:
     resolution: {integrity: sha1-Hgyqk2TT/M0pMcPtlv2+ql1MyoM=, tarball: '@types/estree/download/@types/estree-0.0.50.tgz'}
-    dev: true
-
-  /@types/formidable/2.0.3:
-    resolution: {integrity: sha512-u1dFrrhT2XrNzDJ+f/qwxxEU9cGTiQvItSaghiU+sQXX/XU+jsxCGrAuUR7BjkeHHB2P4pR4XUr52TGDNfzhRg==, tarball: '@types/formidable/download/@types/formidable-2.0.3.tgz'}
-    dependencies:
-      '@types/node': 17.0.8
     dev: true
 
   /@types/fs-extra/9.0.13:
@@ -1121,14 +1132,11 @@ packages:
 
   /@types/node/14.18.3:
     resolution: {integrity: sha512-GtTH2crF4MtOIrrAa+jgTV9JX/PfoUCYr6MiZw7O/dkZu5b6gm5dc1nAL0jwGo4ortSBBtGyeVaxdC8X6V+pLg==, tarball: '@types/node/download/@types/node-14.18.3.tgz'}
+    dev: true
 
   /@types/node/14.18.5:
     resolution: {integrity: sha512-LMy+vDDcQR48EZdEx5wRX1q/sEl6NdGuHXPnfeL8ixkwCOSZ2qnIyIZmcCbdX0MeRqHhAcHmX+haCbrS8Run+A==, tarball: '@types/node/download/@types/node-14.18.5.tgz'}
     dev: false
-
-  /@types/node/17.0.5:
-    resolution: {integrity: sha512-w3mrvNXLeDYV1GKTZorGJQivK6XLCoGwpnyJFbJVK/aTBQUxOCaa/GlFAAN3OTDFcb7h5tiFG+YXCO2By+riZw==, tarball: '@types/node/download/@types/node-17.0.5.tgz'}
-    dev: true
 
   /@types/node/17.0.8:
     resolution: {integrity: sha512-YofkM6fGv4gDJq78g4j0mMuGMkZVxZDgtU0JRdx6FgiJDG+0fY0GKVolOV8WqVmEhLCXkQRjwDdKyPxJp/uucg==, tarball: '@types/node/download/@types/node-17.0.8.tgz'}
@@ -2051,6 +2059,11 @@ packages:
       semver: 7.3.5
     dev: true
 
+  /cac/6.7.12:
+    resolution: {integrity: sha512-rM7E2ygtMkJqD9c7WnFU6fruFcN3xe4FM5yUmgxhZzIKJk4uHl9U/fhwdajGFQbQuv43FAUo1Fe8gX/oIKDeSA==, tarball: cac/download/cac-6.7.12.tgz}
+    engines: {node: '>=8'}
+    dev: true
+
   /cacheable-request/6.1.0:
     resolution: {integrity: sha1-IP+4vRYrpL4R6VZ9gj22UQUsqRI=, tarball: cacheable-request/download/cacheable-request-6.1.0.tgz}
     engines: {node: '>=8'}
@@ -2475,7 +2488,7 @@ packages:
     dev: true
 
   /deepmerge/4.2.2:
-    resolution: {integrity: sha1-RNLqNnm49NT/ujPwPYZfwee/SVU=, tarball: deepmerge/download/deepmerge-4.2.2.tgz?cache=0&sync_timestamp=1632822781299&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fdeepmerge%2Fdownload%2Fdeepmerge-4.2.2.tgz}
+    resolution: {integrity: sha1-RNLqNnm49NT/ujPwPYZfwee/SVU=, tarball: deepmerge/download/deepmerge-4.2.2.tgz?cache=0&sync_timestamp=1632825560302&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fdeepmerge%2Fdownload%2Fdeepmerge-4.2.2.tgz}
     engines: {node: '>=0.10.0'}
     dev: true
 
@@ -2709,6 +2722,7 @@ packages:
       extract-zip: 1.7.0
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /electron/16.0.6:
     resolution: {integrity: sha512-Xs9dYLYhcJf3wXn8m2gDqFTb1L862KEhMxOx9swfFBHj6NoUPPtUgw/RyPQ0tXN1XPxG9vnBkoI0BdcKwrLKuQ==, tarball: electron/download/electron-16.0.6.tgz}
@@ -3732,7 +3746,7 @@ packages:
     dev: true
 
   /is-binary-path/2.1.0:
-    resolution: {integrity: sha1-6h9/O4DwZCNug0cPhsCcJU+0Wwk=, tarball: is-binary-path/download/is-binary-path-2.1.0.tgz?cache=0&sync_timestamp=1633069689194&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fis-binary-path%2Fdownload%2Fis-binary-path-2.1.0.tgz}
+    resolution: {integrity: sha1-6h9/O4DwZCNug0cPhsCcJU+0Wwk=, tarball: is-binary-path/download/is-binary-path-2.1.0.tgz}
     engines: {node: '>=8'}
     dependencies:
       binary-extensions: 2.2.0
@@ -4854,7 +4868,7 @@ packages:
     dev: true
 
   /normalize-path/3.0.0:
-    resolution: {integrity: sha1-Dc1p/yOhybEf0JeDFmRKA4ghamU=, tarball: normalize-path/download/normalize-path-3.0.0.tgz?cache=0&sync_timestamp=1632822667884&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fnormalize-path%2Fdownload%2Fnormalize-path-3.0.0.tgz}
+    resolution: {integrity: sha1-Dc1p/yOhybEf0JeDFmRKA4ghamU=, tarball: normalize-path/download/normalize-path-3.0.0.tgz}
     engines: {node: '>=0.10.0'}
     dev: true
 
@@ -5049,11 +5063,6 @@ packages:
 
   /picocolors/1.0.0:
     resolution: {integrity: sha1-y1vcdP8/UYkiNur3nWi8RFZKuBw=, tarball: picocolors/download/picocolors-1.0.0.tgz?cache=0&sync_timestamp=1634097134444&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fpicocolors%2Fdownload%2Fpicocolors-1.0.0.tgz}
-
-  /picomatch/2.3.0:
-    resolution: {integrity: sha1-8fBh3o9qS/AiiS4tEoI0+5gwKXI=, tarball: picomatch/download/picomatch-2.3.0.tgz}
-    engines: {node: '>=8.6'}
-    dev: true
 
   /picomatch/2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==, tarball: picomatch/download/picomatch-2.3.1.tgz}
@@ -5326,7 +5335,7 @@ packages:
     resolution: {integrity: sha1-dKNwvYVxFuJFspzJc0DNQxoCpsc=, tarball: readdirp/download/readdirp-3.6.0.tgz}
     engines: {node: '>=8.10.0'}
     dependencies:
-      picomatch: 2.3.0
+      picomatch: 2.3.1
     dev: true
 
   /regexpp/3.2.0:
@@ -5629,7 +5638,7 @@ packages:
     dev: true
 
   /source-map/0.6.1:
-    resolution: {integrity: sha1-dHIq8y6WFOnCh6jQu95IteLxomM=, tarball: source-map/download/source-map-0.6.1.tgz?cache=0&sync_timestamp=1632822727980&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fsource-map%2Fdownload%2Fsource-map-0.6.1.tgz}
+    resolution: {integrity: sha1-dHIq8y6WFOnCh6jQu95IteLxomM=, tarball: source-map/download/source-map-0.6.1.tgz}
     engines: {node: '>=0.10.0'}
 
   /source-map/0.7.3:
@@ -5988,7 +5997,7 @@ packages:
     dev: true
 
   /tslib/2.2.0:
-    resolution: {integrity: sha1-+yxHWXfjXiQTEe3iaTzuHsZpj1w=, tarball: tslib/download/tslib-2.2.0.tgz?cache=0&sync_timestamp=1632920830240&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Ftslib%2Fdownload%2Ftslib-2.2.0.tgz}
+    resolution: {integrity: sha512-gS9GVHRU+RGn5KQM2rllAlR3dU6m7AcpJKdtH8gFvQiC4Otgk98XnmMU+nZenHt/+VhnBPWwgrJsyrdcw6i23w==, tarball: tslib/download/tslib-2.2.0.tgz}
     dev: true
 
   /tslib/2.3.1:
@@ -6084,7 +6093,7 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /unplugin-icons/0.13.0_vite@2.7.9:
+  /unplugin-icons/0.13.0_rollup@2.62.0+vite@2.7.9:
     resolution: {integrity: sha512-CyAl0HV3bZUGT7ut9agpPRhEYXCvufr80Fh72yrkD57BVCTZ7ze10Rt63ZrvPXiJQpd+aI/Bizm2aqOf3WPSfg==, tarball: unplugin-icons/download/unplugin-icons-0.13.0.tgz}
     peerDependencies:
       '@svgr/core': ^5.5.0
@@ -6107,7 +6116,7 @@ packages:
       debug: 4.3.3
       kolorist: 1.5.1
       local-pkg: 0.4.0
-      unplugin: 0.2.21_vite@2.7.9
+      unplugin: 0.2.21_rollup@2.62.0+vite@2.7.9
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -6115,7 +6124,7 @@ packages:
       - webpack
     dev: true
 
-  /unplugin-vue-components/0.17.11_vite@2.7.9+vue@3.2.26:
+  /unplugin-vue-components/0.17.11_75e9e1bb8b559d301075f79696a95504:
     resolution: {integrity: sha512-u5MQ0TbikszRelCt6EA/HskGtGkGLDxi7tQ4/4tcEPWkH3yXSZRJCOeLF5MSdxN1SiGjaJ0I9zeHjoZFC3FvRw==, tarball: unplugin-vue-components/download/unplugin-vue-components-0.17.11.tgz}
     engines: {node: '>=14'}
     peerDependencies:
@@ -6137,7 +6146,7 @@ packages:
       magic-string: 0.25.7
       minimatch: 3.0.4
       resolve: 1.20.0
-      unplugin: 0.2.21_vite@2.7.9
+      unplugin: 0.2.21_rollup@2.62.0+vite@2.7.9
       vue: 3.2.26
     transitivePeerDependencies:
       - rollup
@@ -6146,7 +6155,7 @@ packages:
       - webpack
     dev: true
 
-  /unplugin/0.2.21_vite@2.7.9:
+  /unplugin/0.2.21_rollup@2.62.0+vite@2.7.9:
     resolution: {integrity: sha512-IJ15/L5XbhnV7J09Zjk0FT5HEkBjkXucWAXQWRsmEtUxmmxwh23yavrmDbCF6ZPxWiVB28+wnKIHePTRRpQPbQ==, tarball: unplugin/download/unplugin-0.2.21.tgz}
     peerDependencies:
       rollup: ^2.50.0
@@ -6160,6 +6169,7 @@ packages:
       webpack:
         optional: true
     dependencies:
+      rollup: 2.62.0
       vite: 2.7.9
       webpack-virtual-modules: 0.4.3
     dev: true

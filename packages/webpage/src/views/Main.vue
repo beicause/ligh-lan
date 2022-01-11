@@ -66,7 +66,7 @@ function receiveWs() {
         const data = JSON.parse(res.data)
         switch (data.mode) {
             case 'fileInfo':
-                fileInfo.value = JSON.parse(data.data)
+                fileInfo.value = data.data
                 if (fileInfo.value) {
                     currentDir.value = fileInfo.value.path
                     serverRoot.value = currentDir.value
@@ -88,23 +88,6 @@ function connectWs() {
     }
     ws.onopen = () => console.log('client connected')
 }
-function getRootDirInfo(root: string): FileNode {
-    const dirs: string[] = electron?.readDir(root)
-    return {
-        type: 'dir', path: root, children: dirs.map(_dir => {
-            const dir = root + '/' + _dir
-            if (electron?.isFile(dir)) return { type: 'file', path: dir }
-            const children = electron?.readDir(dir).map((d: string) => dir + '/' + d) as string[] | undefined
-            if (!children || children.every(d => electron?.isFile(d)))
-                return { type: 'dir', path: dir, children: children?.map(c => { return { type: 'file', path: c } }) }
-            return getRootDirInfo(dir)
-        })
-    } as FileNode
-}
-
-function setFileInfo() {
-    electron?.send('fileInfo', JSON.stringify(fileInfo.value))
-}
 
 function openDir() {
     electron?.openDialog({ title: 'select directory', properties: ['openDirectory'] })
@@ -117,8 +100,6 @@ function openDir() {
 
 async function serve() {
     currentDir.value = serverRoot.value
-    fileInfo.value = getRootDirInfo(serverRoot.value)
-    setFileInfo()
     const _address = await electron?.serveDir(currentDir.value, port.value, ip.value).catch(err => {
         console.log(err)
         message.error('fail to launch')
@@ -132,24 +113,6 @@ async function serve() {
     connectWs()
     receiveWs()
 }
-
-
-
-// async function stop() {
-//     clearData()
-//     ws?.close()
-//     return await electron?.serveStop()
-// }
-
-// function clearData() {
-//     trueAddress.value = [] as { type: 'local' | 'network', address: string, port: number }[]
-//     currentDir.value = ''
-//     displayFile.value = undefined
-//     historyPath.value = []
-//     historyPoint.value = 0
-//     fileInfo.value = undefined
-// }
-
 
 function onClickMenu(_key: string) {
     editMode.value = false
@@ -189,10 +152,7 @@ function getFileExt(path: string) {
 function getFileName(path: string) {
     return path.substring(path.lastIndexOf('/') + 1)
 }
-// async function restart() {
-//     await stop()
-//     await serve()
-// }
+
 function newFileConfirm() {
     if (inputType.value === 'file') {
         ws?.send(JSON.stringify({
@@ -281,12 +241,6 @@ watch(() => displayFile.value, file => {
     else {
         changeDisplayText(file)
     }
-})
-
-electron?.on('resetFileReply', () => {
-    fileInfo.value = getRootDirInfo(serverRoot.value)
-    setFileInfo()
-    electron?.send('resetFileComplete')
 })
 
 if (!electron) {
@@ -474,14 +428,19 @@ const menu = computed(() =>
                     </div>
                     <div v-show="!displayImg">
                         <NInput
-                            autosize
+                            :autosize="{ maxRows: 34 }"
                             :placeholder="''"
                             disabled
                             type="textarea"
                             v-if="!editMode"
                             :value="displayText"
                         ></NInput>
-                        <NInput autosize type="textarea" v-else v-model:value="editText"></NInput>
+                        <NInput
+                            :autosize="{ maxRows: 34 }"
+                            type="textarea"
+                            v-else
+                            v-model:value="editText"
+                        ></NInput>
                     </div>
                 </div>
             </div>
