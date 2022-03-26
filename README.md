@@ -9,7 +9,7 @@ a desktop application based on electron for sharing and editing files in LAN
 * serve a directory, then by entering the server's url, any devices in the same local area network can see it.
 * create, edit, upload and delete files in the shared directory.
 
-## Cli
+## CLI
 
 see [packages/cli](https://github.com/beicause/ligh-lan/tree/master/packages/cli)
 
@@ -33,6 +33,6 @@ pnpm i
 pnpm build
 ```
 
-## Notice
+## Note
 
 DON'T  share sensitive information unless you know what you are doing. For example, your bank card PIN or your credit card expiry date. 
