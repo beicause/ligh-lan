@@ -1,7 +1,6 @@
 {
   "name": "ligh-lan-webpage",
-  "version": "0.0.0",
-  "private":true,
+  "version": "0.0.1",
   "files": [
     "dist"
   ],

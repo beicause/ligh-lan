@@ -1,6 +1,6 @@
 {
   "name": "ligh-lan-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "a server for sharing and editing files in LAN",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,6 +39,6 @@
   },
   "dependencies": {
     "formidable": "^2.0.1",
-    "ligh-lan-webpage": "workspace:*"
+    "ligh-lan-webpage": "^0.0.1"
   }
 }
