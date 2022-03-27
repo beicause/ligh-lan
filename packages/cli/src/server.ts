@@ -62,7 +62,7 @@ export const server = {
       )
       middleware.use(sirv(p.dirname(require.resolve('ligh-lan-webpage'))))
       middleware.use('/upload', (req, res, next) => {
-        const form = formidable()
+        const form = formidable({ maxFileSize: 10 * 1024 * 1024 * 1024 })
         form.parse(req, (err, fields, files) => {
           if (err || typeof fields.dir !== 'string') {
             res.writeHead(400)
